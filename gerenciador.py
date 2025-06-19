@@ -2,6 +2,7 @@ import models.gt
 
 from time import sleep
 
+"""
 import PySimpleGUI as sg
 
 def criar_janela_inicial():
@@ -26,4 +27,41 @@ while True:
         janela.extend_layout(janela['container'],[[sg.Checkbox(''), sg.Input('')]],)
     elif event ==  'Resetar':
         janela.close()
-        janela = criar_janela_inicial()
+        janela = criar_janela_inicial()"""
+
+
+import customtkinter as ctk
+
+#configurar a aparência
+
+ctk.set_appearance_mode('dark')
+
+#criação de tela inicial
+
+app = ctk.CTk()
+app.title('Sistema de Login')
+app.geometry('350x350')
+
+#criação de campos
+
+#Label - Usuário
+label_usuario = ctk.CTkLabel(app, text='Usuário')
+label_usuario.pack(pady=10)
+
+#entry - Campo de usuário
+campo_usuario = ctk.CTkEntry(app, placeholder_text='Digite seu usuário')
+campo_usuario.pack(pady=10)
+
+#Label - Senha
+label_senha = ctk.CTkLabel(app, text='Senha')
+label_senha.pack()
+
+#entry - Campo de usuário
+campo_senha = ctk.CTkEntry(app, placeholder_text='Digite sua senha')
+campo_senha.pack(pady=10)
+#Button
+botao = ctk.CTkButton(app, text='Login')
+botao.pack(pady=10)
+
+#iniciar a aplicação
+app.mainloop()
