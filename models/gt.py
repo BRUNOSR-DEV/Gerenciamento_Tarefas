@@ -24,20 +24,21 @@ def desconectar(conn):
         conn.close()
 
 
-def listar():
+def pega_dados():
     """
-    Função para listar os produtos
+    Função que retorna lista de usuarios
     """
     conn= conectar()
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM tarefas')
-    tarefas = cursor.fetchall()
+    cursor.execute('SELECT * FROM usuario')
+    usuarios = cursor.fetchall()
 
-    if tarefas:
-        return tarefas
+    if usuarios:
+        return usuarios
     else:
-        pass
+        return 'Não tem usuários cadastrados'
     desconectar(conn)
+
 
 
 def inserir_usuario():
