@@ -1,4 +1,4 @@
-from models.gt import pega_dados
+from models.gt import pega_dados, inserir_usuario
 
 from time import sleep
 
@@ -42,9 +42,9 @@ class Login(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title('Sistem de Login')
-        self.geometry('350x350')
+        self.geometry('350x400')
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure((0, 1, 2, 3), weight=0)
+        self.grid_rowconfigure((0, 1, 2, 3, 4, 5), weight=0)
 
         self.label = ctk.CTkLabel(self, text="Faça seu Login", font=ctk.CTkFont(size=20, weight="bold"))
         self.label.grid(row=0, column=0, pady=20)
@@ -58,25 +58,95 @@ class Login(ctk.CTk):
         self.login = ctk.CTkButton(self, text="Entrar", command=self.validar_login)
         self.login.grid(row=3, column=0, padx=20, pady=10)
 
+        self.registrar = ctk.CTkButton(self, text="Registar", command=self.abrir_tela_registro)
+        self.registrar.grid(row=4, column=0, padx=20, pady=10)
+
         self.status_label = ctk.CTkLabel(self, text="", text_color="red")
-        self.status_label.grid(row=4, column=0, pady=5)
+        self.status_label.grid(row=5, column=0, pady=5)
 
     def validar_login(self):
         usuario = self.usuario_entry.get()
         senha = self.senha_entry.get()
+        login_sucesso = False
 
         for _, v in enumerate(pega_dados()):
             if usuario == v[1] and senha == v[2]:
-                self.status_label.configure(text='Login feito com sucesso', text_color='green')
-                sleep(1)
-                self.destroy()
+                login_sucesso = True
+                break
+         
+        if login_sucesso:
+            self.status_label.configure(text='Login feito com sucesso', text_color='green')
+            self.update_idletasks() # Atualiza a UI para mostrar a mensagem
+            sleep(2)
+            self.destroy()
 
-                #abre a janela principal
-                main_app = Main_app()
-                main_app.mainloop()
+            # Abre a janela principal (Gerenciador de Tarefas)
+            main_app = Main_app()
+            main_app.mainloop()
+        else:
+            self.status_label.configure(text='Login Incorreto!', text_color='red')
+
+    def abrir_tela_registro(self):
+        # Passa a própria instância da tela de login para a tela de registro
+        register_window = Registro_usuario(self, login_instance=self)
+        self.status_label.configure(text='Abrindo tela de registro...', text_color='blue')
+        # A mainloop() não é chamada para toplevels, elas são gerenciadas pelo master.
+        # self.wait_window(register_window) # Opcional: Pausa a janela de login até a popup fechar
+
+
+
+class Registro_usuario(ctk.CTk):
+
+    def __init__(self,  master=None, login_instance=None):
+        super().__init__(master)
+
+        self.master = master # A referência à janela pai (opcional, mas útil)
+        self.login_instance = login_instance
+
+
+        self.title("Registrar Novo Usuário")
+        self.geometry("350x350")
+        self.transient(master) # Faz a popup aparecer sobre a janela principal e fechar com ela
+        self.grab_set() # Bloqueia interações com a janela principal enquanto a popup está aberta
+        self.focus_set() # Define o foco para esta janela
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure((0, 1, 2, 3, 4, 5), weight=0)
+
+        ctk.CTkLabel(self, text="Crie sua nova conta", font=ctk.CTkFont(size=18, weight="bold")).grid(row=0, column=0, pady=15)
+
+        self.novo_usuario = ctk.CTkEntry(self, placeholder_text="Novo Usuário")
+        self.novo_usuario.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
+
+        self.nova_senha = ctk.CTkEntry(self, placeholder_text="Nova Senha", show="*")
+        self.nova_senha.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
+
+        self.rep_nova_senha = ctk.CTkEntry(self, placeholder_text="Nova Senha", show="*")
+        self.rep_nova_senha.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
+
+        self.confirm_button = ctk.CTkButton(self, text="Confirmar Registro", command=self.processar_registro)
+        self.confirm_button.grid(row=4, column=0, padx=20, pady=10)
+
+        self.status_label = ctk.CTkLabel(self, text="", text_color="red")
+        self.status_label.grid(row=5, column=0, pady=5)
+
+        def processar_registro():
+            usuario = self.novo_usuario.get().strip()
+            senha1 = self.nova_senha.get().strip()
+            senha2 = self.rep_nova_senha.get().strip()
+        
+            if senha1 == senha2:
+                inserir_usuario(usuario, senha1)
+
+                retorno = inserir_usuario(usuario, senha1)
+                if retorno:
+                    sleep(1)
+                    self.status_label.configure(text='Os dados foram inseridos com sucesso!', text_color='green')
+                else:
+                    self.status_label.configure(text='Não foi possível registrar, contate o adm do sistema...', text_color='red')
             else:
-                 self.status_label.configure(text='Login Incorreto!', text_color='red')
-            
+                self.status_label.configure(text='As senhas não correspondem!', text_color='red')
+
 
 class Main_app(ctk.CTk):
     def __init__(self):

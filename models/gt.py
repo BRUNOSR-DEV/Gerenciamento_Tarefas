@@ -41,32 +41,26 @@ def pega_dados():
 
 
 
-def inserir_usuario():
+def inserir_usuario(usuario, senha):
     """
-    Função para inserir um produto
+    Função para inserir um usuário
     """  
     conn = conectar()
     cursor = conn.cursor()
 
-    nome = input(f'Informe o nome do produto: ')
-    preco = float(input('Informe o preço do produto: '))
-    estoque = int(input('Informe a quantidade em estoque: '))
 
-    cursor.execute(f"INSERT INTO produtos (nome, preco, estoque) VALUES ('{nome}',{preco},{estoque})")
+    cursor.execute(f"INSERT INTO usuario (nome, senha) VALUES ('{usuario}',{senha})")
     conn.commit()
 
-    if cursor.rowcount == 1:
-        print(f'O produto {nome} foi inserido com sucesso.')
+    
+    if cursor.rowcount == 1: #retorna o número de linhas afetadas pela última operação executada.
+        desconectar(conn)
+        return True
     else:
-        print('Não foi possível inserir o produto.')
-    desconectar(conn)
-
-    continuar = input('Inserir mais dados ? [S] SIM - [N] NÃO')
-
-    if continuar == 's' or continuar == 'S':
-        inserir()
-    elif continuar == 'n' or continuar == 'N':
-        menu()
+        desconectar(conn)
+        return False
+    
+    
 
 
 def inserir_tarefa():
