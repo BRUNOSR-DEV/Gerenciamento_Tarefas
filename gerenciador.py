@@ -89,13 +89,14 @@ class Login(ctk.CTk):
     def abrir_tela_registro(self):
         # Passa a própria instância da tela de login para a tela de registro
         register_window = Registro_usuario(self, login_instance=self)
-        self.status_label.configure(text='Abrindo tela de registro...', text_color='blue')
+        #self.status_label.configure(text='Abrindo tela de registro...', text_color='blue')
+        
         # A mainloop() não é chamada para toplevels, elas são gerenciadas pelo master.
-        # self.wait_window(register_window) # Opcional: Pausa a janela de login até a popup fechar
+        self.wait_window(register_window) # Opcional: Pausa a janela de login até a popup fechar
 
 
 
-class Registro_usuario(ctk.CTk):
+class Registro_usuario(ctk.CTkToplevel):
 
     def __init__(self,  master=None, login_instance=None):
         super().__init__(master)
@@ -105,7 +106,7 @@ class Registro_usuario(ctk.CTk):
 
 
         self.title("Registrar Novo Usuário")
-        self.geometry("350x350")
+        self.geometry("350x400")
         self.transient(master) # Faz a popup aparecer sobre a janela principal e fechar com ela
         self.grab_set() # Bloqueia interações com a janela principal enquanto a popup está aberta
         self.focus_set() # Define o foco para esta janela
@@ -121,31 +122,42 @@ class Registro_usuario(ctk.CTk):
         self.nova_senha = ctk.CTkEntry(self, placeholder_text="Nova Senha", show="*")
         self.nova_senha.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
 
-        self.rep_nova_senha = ctk.CTkEntry(self, placeholder_text="Nova Senha", show="*")
+        self.rep_nova_senha = ctk.CTkEntry(self, placeholder_text="Repita a senha", show="*")
         self.rep_nova_senha.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
 
-        self.confirm_button = ctk.CTkButton(self, text="Confirmar Registro", command=self.processar_registro)
-        self.confirm_button.grid(row=4, column=0, padx=20, pady=10)
+        self.botao_registrar = ctk.CTkButton(self, text="Confirmar Registro", command=self.processar_registro)
+        self.botao_registrar.grid(row=4, column=0, padx=20, pady=10, sticky="ew")
 
         self.status_label = ctk.CTkLabel(self, text="", text_color="red")
         self.status_label.grid(row=5, column=0, pady=5)
 
-        def processar_registro():
-            usuario = self.novo_usuario.get().strip()
-            senha1 = self.nova_senha.get().strip()
-            senha2 = self.rep_nova_senha.get().strip()
+    def processar_registro(self):
         
-            if senha1 == senha2:
-                inserir_usuario(usuario, senha1)
+        usuario = self.novo_usuario.get().strip()
+        senha1 = self.nova_senha.get().strip()
+        senha2 = self.rep_nova_senha.get().strip()
 
-                retorno = inserir_usuario(usuario, senha1)
-                if retorno:
-                    sleep(1)
-                    self.status_label.configure(text='Os dados foram inseridos com sucesso!', text_color='green')
-                else:
-                    self.status_label.configure(text='Não foi possível registrar, contate o adm do sistema...', text_color='red')
+        if not usuario or not senha1 or not senha2:
+            self.status_label.configure(text='Por favor, preencha todos os campos!', text_color='red')
+            self.update_idletasks()
+            return
+
+        if senha1 == senha2:
+            retorno = inserir_usuario(usuario, senha1)
+
+            if retorno:
+                self.status_label.configure(text='Os dados foram inseridos com sucesso!', text_color='green')
+                self.update_idletasks()
+                sleep(4)
+                self.destroy()
             else:
-                self.status_label.configure(text='As senhas não correspondem!', text_color='red')
+                self.status_label.configure(text='Não foi possível registrar, contate o adm do sistema...', text_color='red')
+                self.update_idletasks()
+        else:
+            self.status_label.configure(text='As senhas não correspondem!', text_color='red')
+            self.update_idletasks()
+
+
 
 
 class Main_app(ctk.CTk):
@@ -162,11 +174,11 @@ class Main_app(ctk.CTk):
         self.add_task_frame = ctk.CTkFrame(self)
         self.add_task_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
 
-        self.task_entry = ctk.CTkEntry(self.add_task_frame, placeholder_text="Digite uma nova tarefa...")
-        self.task_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
+        self.tarefa_entry = ctk.CTkEntry(self.add_task_frame, placeholder_text="Digite uma nova tarefa...")
+        self.tarefa_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
 
-        self.add_button = ctk.CTkButton(self.add_task_frame, text="Adicionar", command=self.add_task)
-        self.add_button.pack(side="right")
+        self.add_botao = ctk.CTkButton(self.add_task_frame, text="Adicionar", command=self.add_tarefa)
+        self.add_botao.pack(side="right")
 
         # Frame para conter a lista de tarefas
         self.tasks_container_frame = ctk.CTkScrollableFrame(self, fg_color="transparent")
@@ -177,11 +189,11 @@ class Main_app(ctk.CTk):
         self.add_task_widget("Fazer exercício", True)
         self.add_task_widget("Reunião às 10h", False)
 
-    def add_task(self):
-        task_text = self.task_entry.get().strip()
-        if task_text:
-            self.add_task_widget(task_text, False)
-            self.task_entry.delete(0, ctk.END)
+    def add_tarefa(self):
+        tarefa_text = self.tarefa_entry.get().strip()
+        if tarefa_text:
+            self.add_task_widget(tarefa_text, False)
+            self.tarefa_entry.delete(0, ctk.END)
 
     def add_task_widget(self, task_text, completed):
         task_frame = ctk.CTkFrame(self.tasks_container_frame, fg_color="transparent")

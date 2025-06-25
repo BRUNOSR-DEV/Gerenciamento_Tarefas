@@ -49,9 +49,8 @@ def inserir_usuario(usuario, senha):
     cursor = conn.cursor()
 
 
-    cursor.execute(f"INSERT INTO usuario (nome, senha) VALUES ('{usuario}',{senha})")
+    cursor.execute(f"INSERT INTO usuario (nome_usuario, senha) VALUES ('{usuario}',{senha})")
     conn.commit()
-
     
     if cursor.rowcount == 1: #retorna o número de linhas afetadas pela última operação executada.
         desconectar(conn)
