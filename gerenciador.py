@@ -68,6 +68,7 @@ class Login(ctk.CTk):
         usuario = self.usuario_entry.get()
         senha = self.senha_entry.get()
         login_sucesso = False
+        usuario_logado = usuario
 
         for _, v in enumerate(pega_dados()):
             if usuario == v[1] and senha == v[2]:
@@ -81,10 +82,15 @@ class Login(ctk.CTk):
             self.destroy()
 
             # Abre a janela principal (Gerenciador de Tarefas)
-            main_app = Main_app()
+            main_app = Main_app(logged_in_username=usuario_logado)
             main_app.mainloop()
         else:
             self.status_label.configure(text='Login Incorreto!', text_color='red')
+
+    @property
+    def nome_usuario(self):
+        return self.usuario
+    
 
     def abrir_tela_registro(self):
         # Passa a própria instância da tela de login para a tela de registro
@@ -140,6 +146,7 @@ class Registro_usuario(ctk.CTkToplevel):
         if not usuario or not senha1 or not senha2:
             self.status_label.configure(text='Por favor, preencha todos os campos!', text_color='red')
             self.update_idletasks()
+            sleep(1)
             return
 
         if senha1 == senha2:
@@ -148,7 +155,13 @@ class Registro_usuario(ctk.CTkToplevel):
             if retorno:
                 self.status_label.configure(text='Os dados foram inseridos com sucesso!', text_color='green')
                 self.update_idletasks()
-                sleep(4)
+                sleep(2)
+
+                
+                self.status_label.configure(text=f'usuário: {usuario} Já pode fazer login no sistema! ', text_color='blue')
+                self.update_idletasks()
+                sleep(6)
+
                 self.destroy()
             else:
                 self.status_label.configure(text='Não foi possível registrar, contate o adm do sistema...', text_color='red')
@@ -161,39 +174,61 @@ class Registro_usuario(ctk.CTkToplevel):
 
 
 class Main_app(ctk.CTk):
-    def __init__(self):
+    def __init__(self, logged_in_username=None):
         super().__init__()
         self.title("Gerenciador de Tarefas")
         self.geometry("600x500")
 
-        self.grid_rowconfigure(0, weight=0)
-        self.grid_rowconfigure(1, weight=1)
+        # Solução para o AttributeError: use __dict__ para definir o atributo
+        # E/ou use um nome ligeiramente diferente para evitar conflitos indiretos
+        self.__dict__['_app_logged_in_username'] = logged_in_username # <--- ALTERADO AQUI!
+
+        self.grid_rowconfigure(0, weight=0) # Linha para o frame superior (usuário e add tarefa)
+        self.grid_rowconfigure(1, weight=1) # Linha para o frame de tarefas rolavel
         self.grid_columnconfigure(0, weight=1)
 
-         # Frame para adicionar nova tarefa
-        self.add_task_frame = ctk.CTkFrame(self)
-        self.add_task_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        # Frame superior para o nome do usuário e a área de adicionar tarefa
+        self.top_section_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.top_section_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        self.top_section_frame.grid_columnconfigure(0, weight=1) # Para o label se expandir
 
-        self.tarefa_entry = ctk.CTkEntry(self.add_task_frame, placeholder_text="Digite uma nova tarefa...")
-        self.tarefa_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
+        # Label para exibir o nome do usuário
+        # Acesse o atributo usando a nova forma: self._app_logged_in_username
+        if self._app_logged_in_username: # <--- ALTERADO AQUI!
+            self.username_label = ctk.CTkLabel(self.top_section_frame,
+                                               text=f"Bem-vindo, {self._app_logged_in_username}!", # <--- E AQUI!
+                                               font=ctk.CTkFont(size=16, weight="bold"))
+        else:
+            self.username_label = ctk.CTkLabel(self.top_section_frame,
+                                               text="Bem-vindo!",
+                                               font=ctk.CTkFont(size=16, weight="bold"))
+        self.username_label.grid(row=0, column=0, pady=(0, 10), sticky="w") # Posicione o label dentro do top_section_frame
 
-        self.add_botao = ctk.CTkButton(self.add_task_frame, text="Adicionar", command=self.add_tarefa)
-        self.add_botao.pack(side="right")
+        # Frame para adicionar nova tarefa (dentro do top_section_frame)
+        self.add_task_frame = ctk.CTkFrame(self.top_section_frame, fg_color="transparent") # <--- Filho do top_section_frame
+        self.add_task_frame.grid(row=1, column=0, padx=0, pady=0, sticky="ew") # <--- Agora na linha 1 dentro de top_section_frame
 
-        # Frame para conter a lista de tarefas
+
+        self.task_entry = ctk.CTkEntry(self.add_task_frame, placeholder_text="Digite uma nova tarefa...")
+        self.task_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
+
+        self.add_button = ctk.CTkButton(self.add_task_frame, text="Adicionar", command=self.add_task)
+        self.add_button.pack(side="right")
+
+        # Frame para conter a lista de tarefas (filho da Main_app, na próxima linha)
         self.tasks_container_frame = ctk.CTkScrollableFrame(self, fg_color="transparent")
-        self.tasks_container_frame.grid(row=1, column=0, padx=10, pady=5, sticky="nsew")
+        self.tasks_container_frame.grid(row=1, column=0, padx=10, pady=5, sticky="nsew") # <--- Agora na linha 1 (da Main_app), pois o top_section_frame está na linha 0. A Main_app tem 2 rows principais.
 
         self.task_widgets = []
         self.add_task_widget("Comprar pão", False)
         self.add_task_widget("Fazer exercício", True)
         self.add_task_widget("Reunião às 10h", False)
 
-    def add_tarefa(self):
-        tarefa_text = self.tarefa_entry.get().strip()
-        if tarefa_text:
-            self.add_task_widget(tarefa_text, False)
-            self.tarefa_entry.delete(0, ctk.END)
+    def add_task(self): # Nome do método alterado para corresponder ao botão (se você alterou no seu código)
+        task_text = self.task_entry.get().strip()
+        if task_text:
+            self.add_task_widget(task_text, False)
+            self.task_entry.delete(0, ctk.END)
 
     def add_task_widget(self, task_text, completed):
         task_frame = ctk.CTkFrame(self.tasks_container_frame, fg_color="transparent")
