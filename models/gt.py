@@ -16,6 +16,7 @@ def conectar():
     except MySQLdb.Error as e:
         print(f'Erro na conexão ao MySql Server: {e}')
 
+
 def desconectar(conn):
     """ 
     Função para desconectar do servidor.
@@ -26,7 +27,7 @@ def desconectar(conn):
 
 def pega_dados():
     """
-    Função que retorna lista de usuarios
+    Função que retorna lista de usuarios e seus dados
     """
     conn= conectar()
     cursor = conn.cursor()
@@ -34,16 +35,27 @@ def pega_dados():
     usuarios = cursor.fetchall()
 
     if usuarios:
+        desconectar(conn)
         return usuarios
     else:
+        desconectar(conn)
         return 'Não tem usuários cadastrados'
-    desconectar(conn)
 
+
+def pega_id(usuario): 
+    '''função que busca id do usuário no bd e retorna a mesma'''  
+    conn = conectar()
+    cursor = conn.cursor()
+
+    id = cursor.execute(f"SELECT id FROM usuario WHERE nome_usuario = '{usuario}'")
+
+    desconectar(conn)
+    return id
 
 
 def inserir_usuario(usuario, senha):
     """
-    Função para inserir um usuário
+    Função para inserir um usuário novo
     """  
     conn = conectar()
     cursor = conn.cursor()
@@ -58,36 +70,46 @@ def inserir_usuario(usuario, senha):
     else:
         desconectar(conn)
         return False
-    
-    
 
 
-def inserir_tarefa():
-    """
-    Função para inserir um produto
-    """  
+def inserir_tarefas(descricao, id_usuario, checkbox):
+    """Função que inseri novas tarefas"""
     conn = conectar()
     cursor = conn.cursor()
 
-    nome = input(f'Informe o nome do produto: ')
-    preco = float(input('Informe o preço do produto: '))
-    estoque = int(input('Informe a quantidade em estoque: '))
-
-    cursor.execute(f"INSERT INTO produtos (nome, preco, estoque) VALUES ('{nome}',{preco},{estoque})")
+    cursor.execute(f"INSERT INTO tarefas (descricao, fk_usuario, checkbox) VALUES ('{descricao}', {id_usuario}, {checkbox})")
     conn.commit()
-
-    if cursor.rowcount == 1:
-        print(f'O produto {nome} foi inserido com sucesso.')
+    
+    if cursor.rowcount == 1: #retorna o número de linhas afetadas pela última operação executada.
+        desconectar(conn)
+        return True
     else:
-        print('Não foi possível inserir o produto.')
-    desconectar(conn)
+        desconectar(conn)
+        return False
 
-    continuar = input('Inserir mais dados ? [S] SIM - [N] NÃO')
 
-    if continuar == 's' or continuar == 'S':
-        inserir()
-    elif continuar == 'n' or continuar == 'N':
-        menu()
+def listar_tarefas(id_usuario):
+    
+    conn= conectar()
+    cursor = conn.cursor()
+
+    cursor.execute(f'SELECT checkbox, descricao FROM tarefas WHERE fk_usuario = {id_usuario}')
+    tarefas = cursor.fetchall()
+
+    if tarefas:
+        desconectar(conn)
+        return tarefas
+    else:
+        desconectar(conn)
+        return None
+
+
+def deletar_tarefa(descricao):
+    pass
+
+
+
+
 
 
 def atualizar():

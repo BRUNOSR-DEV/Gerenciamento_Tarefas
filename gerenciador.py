@@ -1,4 +1,4 @@
-from models.gt import pega_dados, inserir_usuario
+from models.gt import pega_dados, inserir_usuario, pega_id
 
 from time import sleep
 
@@ -55,10 +55,13 @@ class Login(ctk.CTk):
         self.senha_entry = ctk.CTkEntry(self, placeholder_text="Senha", show="*")
         self.senha_entry.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
 
-        self.login = ctk.CTkButton(self, text="Entrar", command=self.validar_login)
-        self.login.grid(row=3, column=0, padx=20, pady=10)
+        self.botao_enter = ctk.CTkButton(self, text="Entrar", command=self.validar_login, 
+                                         fg_color="#000200", hover_color="#FC0404")
+        self.botao_enter.grid(row=3, column=0, padx=20, pady=10)
+        self.bind("<Return>", lambda event: self.botao_enter.invoke())
 
-        self.registrar = ctk.CTkButton(self, text="Registar", command=self.abrir_tela_registro)
+        self.registrar = ctk.CTkButton(self, text="Registar", command=self.abrir_tela_registro,
+                                       fg_color="#000200", hover_color="#FC0404")
         self.registrar.grid(row=4, column=0, padx=20, pady=10)
 
         self.status_label = ctk.CTkLabel(self, text="", text_color="red")
@@ -87,7 +90,6 @@ class Login(ctk.CTk):
         else:
             self.status_label.configure(text='Login Incorreto!', text_color='red')
 
-    @property
     def nome_usuario(self):
         return self.usuario
     
@@ -157,7 +159,6 @@ class Registro_usuario(ctk.CTkToplevel):
                 self.update_idletasks()
                 sleep(2)
 
-                
                 self.status_label.configure(text=f'usuário: {usuario} Já pode fazer login no sistema! ', text_color='blue')
                 self.update_idletasks()
                 sleep(6)
@@ -220,9 +221,6 @@ class Main_app(ctk.CTk):
         self.tasks_container_frame.grid(row=1, column=0, padx=10, pady=5, sticky="nsew") # <--- Agora na linha 1 (da Main_app), pois o top_section_frame está na linha 0. A Main_app tem 2 rows principais.
 
         self.task_widgets = []
-        self.add_task_widget("Comprar pão", False)
-        self.add_task_widget("Fazer exercício", True)
-        self.add_task_widget("Reunião às 10h", False)
 
     def add_task(self): # Nome do método alterado para corresponder ao botão (se você alterou no seu código)
         task_text = self.task_entry.get().strip()
