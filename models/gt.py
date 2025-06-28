@@ -93,7 +93,7 @@ def listar_tarefas(id_usuario):
     conn= conectar()
     cursor = conn.cursor()
 
-    cursor.execute(f'SELECT checkbox, descricao FROM tarefas WHERE fk_usuario = {id_usuario}')
+    cursor.execute(f'SELECT id, descricao, checkbox FROM tarefas WHERE fk_usuario = {id_usuario}')
     tarefas = cursor.fetchall()
 
     if tarefas:
@@ -105,10 +105,37 @@ def listar_tarefas(id_usuario):
 
 
 def deletar_tarefa(descricao):
-    pass
 
 
+    conn = conectar()
+    cursor = conn.cursor()
 
+    cursor.execute(f"DELETE FROM tarefas WHERE descricao='{descricao}'")
+
+    if cursor.rowcount == 1: 
+        print('Produto excluído com sucesso.')
+    else:
+         print(f'Erro ao excluir o produto {descricao}')
+
+    desconectar.conn()
+
+
+def atualizar_checkbox(descricao):
+
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute(f"UPDATE tarefas SET checkbox = {True} WHERE descricao = '{descricao}' ")
+    conn.commit()
+
+    if cursor.rowcount == 1:
+        print(f'O checkbox foi atualizado com sucesso.')
+        desconectar.conn()
+        return True
+    else:
+        print('Não foi possível atualizar!')
+        desconectar.conn()
+        return False
 
 
 

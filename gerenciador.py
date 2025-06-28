@@ -1,4 +1,4 @@
-from models.gt import pega_dados, inserir_usuario, pega_id
+from models.gt import pega_dados, inserir_usuario, pega_id, inserir_tarefas, deletar_tarefa, atualizar_checkbox, listar_tarefas
 
 from time import sleep
 
@@ -210,8 +210,8 @@ class Main_app(ctk.CTk):
         self.add_task_frame.grid(row=1, column=0, padx=0, pady=0, sticky="ew") # <--- Agora na linha 1 dentro de top_section_frame
 
 
-        self.task_entry = ctk.CTkEntry(self.add_task_frame, placeholder_text="Digite uma nova tarefa...")
-        self.task_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
+        self.tarefa_entry = ctk.CTkEntry(self.add_task_frame, placeholder_text="Digite uma nova tarefa...")
+        self.tarefa_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
 
         self.add_button = ctk.CTkButton(self.add_task_frame, text="Adicionar", command=self.add_task)
         self.add_button.pack(side="right")
@@ -221,30 +221,64 @@ class Main_app(ctk.CTk):
         self.tasks_container_frame.grid(row=1, column=0, padx=10, pady=5, sticky="nsew") # <--- Agora na linha 1 (da Main_app), pois o top_section_frame está na linha 0. A Main_app tem 2 rows principais.
 
         self.task_widgets = []
+        id_usuario = pega_id(self._app_logged_in_username)
+        tamanho = len(listar_tarefas(id_usuario))
 
-    def add_task(self): # Nome do método alterado para corresponder ao botão (se você alterou no seu código)
-        task_text = self.task_entry.get().strip()
-        if task_text:
-            self.add_task_widget(task_text, False)
+        for i,v in enumerate(listar_tarefas(id_usuario)):
+            self.add_task_widget(v[1], v[0])
+            if i+1 == tamanho:
+                break
+
+        '''self.add_task_widget("Comprar pão", False)
+        self.add_task_widget("Fazer exercício", True)
+        self.add_task_widget("Reunião às 10h", False)'''
+
+    def add_task(self): 
+        '''Pega tarefa inserida no entry e manda para função ...widget, salva tarefa no banco de dados'''
+
+        tarefa_text = self.tarefa_entry.get().strip()
+
+
+        if tarefa_text:
+
+            self.add_task_widget(tarefa_text, False)
             self.task_entry.delete(0, ctk.END)
 
-    def add_task_widget(self, task_text, completed):
-        task_frame = ctk.CTkFrame(self.tasks_container_frame, fg_color="transparent")
-        task_frame.pack(fill="x", pady=2)
 
-        checkbox = ctk.CTkCheckBox(task_frame, text=task_text)
-        checkbox.pack(side="left", padx=5)
-        if completed:
+    def add_task_widget(self, tarefa_text, check):
+            
+        id_usuario = pega_id(self._app_logged_in_username)
+
+        ret = inserir_tarefas(tarefa_text, id_usuario, check)
+
+        if ret:
+            task_frame = ctk.CTkFrame(self.tasks_container_frame, fg_color="transparent")
+            task_frame.pack(fill="x", pady=2)
+
+            checkbox = ctk.CTkCheckBox(task_frame, text=tarefa_text)
+            checkbox.pack(side="left", padx=5)
+
+            deletar_tarefa = ctk.CTkButton(task_frame, text="X", width=30, command=lambda: self.remove_task_widget(task_frame))
+            deletar_tarefa.pack(side="right", padx=5)
+            self.task_widgets.append(task_frame)
+
+        else:
+            #colocar essa mensagem em uma janelinha
+            print('Não foi possível inserir no banco de dados! ')
+
+        if check:
             checkbox.select()
+            atualizar_checkbox(task_frame)
+            
         else:
             checkbox.deselect()
-
-        remove_button = ctk.CTkButton(task_frame, text="X", width=30, command=lambda: self.remove_task_widget(task_frame))
-        remove_button.pack(side="right", padx=5)
-        self.task_widgets.append(task_frame)
+            
+   
 
     def remove_task_widget(self, task_frame_to_remove):
         task_frame_to_remove.destroy()
+
+        deletar_tarefa(task_frame_to_remove)
         self.task_widgets.remove(task_frame_to_remove)
 
 # --- Ponto de Entrada da Aplicação ---
