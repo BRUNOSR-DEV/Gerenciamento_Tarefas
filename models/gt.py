@@ -100,8 +100,9 @@ def listar_tarefas(id_usuario):
         desconectar(conn)
         return tarefas
     else:
+        print('Não foi possível trazer dados!')
         desconectar(conn)
-        return None
+        
 
 
 def deletar_tarefa(descricao):
@@ -117,7 +118,7 @@ def deletar_tarefa(descricao):
     else:
          print(f'Erro ao excluir o produto {descricao}')
 
-    desconectar.conn()
+    desconectar(conn)
 
 
 def atualizar_checkbox(descricao):
@@ -130,11 +131,11 @@ def atualizar_checkbox(descricao):
 
     if cursor.rowcount == 1:
         print(f'O checkbox foi atualizado com sucesso.')
-        desconectar.conn()
+        desconectar(conn)
         return True
     else:
         print('Não foi possível atualizar!')
-        desconectar.conn()
+        desconectar(conn)
         return False
 
 
