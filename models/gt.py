@@ -1,5 +1,7 @@
 import MySQLdb
 
+import sqlite3
+
 def conectar():
     """
     Função para conectar ao servidor
@@ -47,10 +49,13 @@ def pega_id(usuario):
     conn = conectar()
     cursor = conn.cursor()
 
-    id = cursor.execute(f"SELECT id FROM usuario WHERE nome_usuario = '{usuario}'")
-
+    cursor.execute(f"SELECT id FROM usuario WHERE nome_usuario = '{usuario}'")
+    result = cursor.fetchone()
     desconectar(conn)
-    return id
+
+    return result
+    return result['id'] if result else None
+
 
 
 def inserir_usuario(usuario, senha):
@@ -73,71 +78,128 @@ def inserir_usuario(usuario, senha):
 
 
 def inserir_tarefas(descricao, id_usuario, checkbox):
-    """Função que inseri novas tarefas"""
+    """Função que inseri novas tarefas, retornando id da tarefa criada"""
     conn = conectar()
     cursor = conn.cursor()
 
     cursor.execute(f"INSERT INTO tarefas (descricao, fk_usuario, checkbox) VALUES ('{descricao}', {id_usuario}, {checkbox})")
     conn.commit()
+
+    cursor.execute(f"SELECT id FROM tarefas WHERE descricao='{descricao}' AND fk_usuario= {id_usuario};")
+    result = cursor.fetchone()
+    
+    
     
     if cursor.rowcount == 1: #retorna o número de linhas afetadas pela última operação executada.
         desconectar(conn)
-        return True
+        return result
     else:
         desconectar(conn)
-        return False
+        return 'ID da tarefa não encontrado no BD - (Inserir_tarefas)'
+    
+    ''' ------outra forma de se fazer---------
+    
+    def inserir_tarefas(descricao_tarefa, id_usuario, status_concluida):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("INSERT INTO tarefas (descricao, id_usuario, concluida) VALUES (?, ?, ?)",
+                       (descricao_tarefa, id_usuario, status_concluida))
+        conn.commit()
+        return cursor.lastrowid # Retorna o ID da última linha inserida
+    except sqlite3.Error as e:
+        print(f"Erro ao inserir tarefa: {e}")
+        conn.rollback()
+        return None
+    finally:
+        conn.close()'''
 
 
 def listar_tarefas(id_usuario):
     
-    conn= conectar()
+    conn = conectar()
     cursor = conn.cursor()
 
-    cursor.execute(f'SELECT id, descricao, checkbox FROM tarefas WHERE fk_usuario = {id_usuario}')
-    tarefas = cursor.fetchall()
-
-    if tarefas:
-        desconectar(conn)
-        return tarefas
-    else:
-        print('Não foi possível trazer dados!')
+    try:
+        # CORREÇÃO: Usar placeholder %s e passar id_usuario como tupla
+        cursor.execute("SELECT id, descricao, checkbox FROM tarefas WHERE fk_usuario = %s", (id_usuario,))
+        tarefas = cursor.fetchall() # Use fetchall() para obter todas as linhas
+        return [(t[0], t[1], t[2]) for t in tarefas] # Se o row_factory não estiver definido, acesse por índice
+    except Exception as e: # Capture exceções para depuração
+        print(f"Erro ao listar tarefas: {e}")
+        return [] # Retorne uma lista vazia em caso de erro
+    finally:
         desconectar(conn)
         
 
 
-def deletar_tarefa(descricao):
+def deletar_tarefa(tarefa_id):
 
 
     conn = conectar()
     cursor = conn.cursor()
 
-    cursor.execute(f"DELETE FROM tarefas WHERE descricao='{descricao}'")
+    descricao = cursor.execute(f'SELECT descricao FROM tarefas WHERE id={tarefa_id}')
+    cursor.execute(f"DELETE FROM tarefas WHERE descricao='{tarefa_id}'")
 
     if cursor.rowcount == 1: 
-        print('Produto excluído com sucesso.')
+        print(f'Produto {descricao} excluído com sucesso.')
     else:
          print(f'Erro ao excluir o produto {descricao}')
 
     desconectar(conn)
 
+    """ ----------- forma mais correta ------------
 
-def atualizar_checkbox(descricao):
+    def deletar_tarefa(id_tarefa):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM tarefas WHERE id = ?", (id_tarefa,))
+        conn.commit()
+        return True
+    except sqlite3.Error as e:
+        print(f"Erro ao deletar tarefa: {e}")
+        conn.rollback()
+        return False
+    finally:
+        conn.close()"""
+
+
+def atualizar_checkbox(tarefa_id, novo_status):
 
     conn = conectar()
     cursor = conn.cursor()
 
-    cursor.execute(f"UPDATE tarefas SET checkbox = {True} WHERE descricao = '{descricao}' ")
+
+    cursor.execute(f"UPDATE tarefas SET checkbox = {novo_status} WHERE id = {tarefa_id} ")
     conn.commit()
 
     if cursor.rowcount == 1:
-        print(f'O checkbox foi atualizado com sucesso.')
+        #print(f'O checkbox foi atualizado com sucesso.')
         desconectar(conn)
         return True
     else:
-        print('Não foi possível atualizar!')
+        #print('Não foi possível atualizar!')
         desconectar(conn)
         return False
+    
+    """------ forma mais correta --------------
 
+    def atualizar_status_tarefa(id_tarefa, status_concluida):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE tarefas SET concluida = ? WHERE id = ?",
+                       (status_concluida, id_tarefa))
+        conn.commit()
+        return True
+    except sqlite3.Error as e:
+        print(f"Erro ao atualizar status: {e}")
+        conn.rollback()
+        return False
+    finally:
+        conn.close()"""
 
 
 def atualizar():

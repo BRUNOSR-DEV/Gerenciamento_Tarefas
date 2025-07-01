@@ -182,7 +182,8 @@ class Main_app(ctk.CTk):
 
         # Solução para o AttributeError: use __dict__ para definir o atributo
         # E/ou use um nome ligeiramente diferente para evitar conflitos indiretos
-        self.__dict__['_app_logged_in_username'] = logged_in_username # <--- ALTERADO AQUI!
+        self.__dict__['_app_logged_in_username'] = logged_in_username
+        self.user_id = pega_id(self._app_logged_in_username)
 
         self.grid_rowconfigure(0, weight=0) # Linha para o frame superior (usuário e add tarefa)
         self.grid_rowconfigure(1, weight=1) # Linha para o frame de tarefas rolavel
@@ -212,7 +213,7 @@ class Main_app(ctk.CTk):
         self.tarefa_entry = ctk.CTkEntry(self.add_task_frame, placeholder_text="Digite uma nova tarefa...")
         self.tarefa_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
 
-        self.add_button = ctk.CTkButton(self.add_task_frame, text="Adicionar", command=self.add_task,
+        self.add_button = ctk.CTkButton(self.add_task_frame, text="Adicionar", command=self.add_tarefa,
                                         fg_color="#006400", hover_color="#008000")
         self.add_button.pack(side="right")
 
@@ -247,18 +248,18 @@ class Main_app(ctk.CTk):
             widget_data['frame'].destroy()
         self.task_widgets_data.clear() # Limpa a lista interna também"""
 
-        tarefas = listar_tarefas(self.id_user)
-        print(self.id_user)
+        tarefas = listar_tarefas(self.user_id)
+        print(self.user_id)
         print(tarefas)
 
         if tarefas:
-            for tarefa_id, descricao, concluida in tarefas: # Assumindo (id, descricao, status)
-                self._create_and_add_task_widget(tarefa_id, descricao, concluida)
+            for tarefa_id, descricao, status in tarefas: # Assumindo (id, descricao, status)
+                self._cria_add_tarefa(tarefa_id, descricao, status)
 
 
 
 
-    def add_task(self): 
+    def add_tarefa(self): 
         '''Pega tarefa inserida no entry e manda para função ...widget, salva tarefa no banco de dados'''
 
         tarefa_text = self.tarefa_entry.get().strip()
@@ -268,11 +269,11 @@ class Main_app(ctk.CTk):
             # Assumindo que inserir_tarefas retorna o ID da tarefa recém-criada
             # e que o status inicial é 0 (não concluída)
 
-            new_task_id = inserir_tarefas(tarefa_text, self.id_user, 0)
+            nova_tarefa_id = inserir_tarefas(tarefa_text, self.user_id, 0)
 
-            if new_task_id:
+            if nova_tarefa_id:
                 # 2. Se a inserção no banco foi bem-sucedida, adicione o widget
-                self._create_and_add_task_widget(new_task_id, tarefa_text, 0)
+                self._cria_add_tarefa(nova_tarefa_id, tarefa_text, 0)
                 self.tarefa_entry.delete(0, ctk.END) # Limpa o campo apenas se salvou no DB
             else:
                 # Você pode adicionar uma mensagem de erro na UI aqui
@@ -280,7 +281,7 @@ class Main_app(ctk.CTk):
 
             
 
-    def _create_and_add_task_widget(self, task_id, tarefa_text, concluida_status):
+    def _cria_add_tarefa(self, tarefa_id, tarefa_text, concluida_status):
         """
         Cria e adiciona um widget de tarefa à UI.
         Este método é interno e chamado por add_task e load_tasks_from_db.
@@ -293,7 +294,7 @@ class Main_app(ctk.CTk):
         # e ligar a uma função de comando
         var_checkbox = ctk.IntVar(value=concluida_status)
         checkbox = ctk.CTkCheckBox(task_frame, text=tarefa_text, variable=var_checkbox,
-                                   command=lambda tid=task_id, cb_var=var_checkbox: self.toggle_task_status(tid, cb_var))
+                                   command=lambda tid=tarefa_id, cb_var=var_checkbox: self.status_tarefa(tid, cb_var))
         checkbox.pack(side="left", padx=5)
 
         # Definir o estado inicial do checkbox
@@ -303,23 +304,45 @@ class Main_app(ctk.CTk):
             checkbox.deselect()
 
         remove_button = ctk.CTkButton(task_frame, text="X", width=30,
-                                       command=lambda tid=task_id, tf=task_frame: self.remove_task_widget(tid, tf))
+                                       command=lambda tid=tarefa_id, tf=task_frame: self.remove_tarefa(tid, tf))
         remove_button.pack(side="right", padx=5)
 
         # Armazenar informações sobre a tarefa, incluindo o ID do banco de dados e o frame
         self.task_widgets_data.append({
-            'id': task_id,
+            'id': tarefa_id,
             'description': tarefa_text,
             'status_var': var_checkbox, # Armazena a variável do checkbox
             'checkbox_widget': checkbox,
             'frame': task_frame
         })
 
-    def remove_task_widget(self, task_frame_to_remove):
-        task_frame_to_remove.destroy()
 
-        deletar_tarefa(task_frame_to_remove)
-        self.task_widgets.remove(task_frame_to_remove)
+    def status_tarefa(self, tarefa_id, checkbox):
+
+        novo_status = checkbox.get() # 1 se marcado, 0 se desmarcado
+        print(f"Tarefa ID: {tarefa_id}, Novo Status: {novo_status}")
+
+        if atualizar_checkbox(tarefa_id, novo_status):
+            print(f"Status da tarefa {tarefa_id} atualizado no DB para {novo_status}")
+        else:
+            print(f"Erro ao atualizar status da tarefa {tarefa_id} no DB.")
+            if novo_status == 1:
+                checkbox.set(0)
+            else:
+                checkbox.set(1)
+
+
+    def remove_tarefa(self, tarefa_id_remove, tarefa_frame_remove):
+        
+        if deletar_tarefa(tarefa_id_remove):
+            tarefa_frame_remove.destroy()
+            self.task_widgets_data = [item for item in self.task_widgets_data if item['id'] != tarefa_id_remove]
+            print(f"Tarefa ID: {tarefa_id_remove} removida do DB e da UI.")
+        else:
+            print(f"Erro ao remover tarefa ID: {tarefa_id_remove} do banco de dados.")
+
+            '''deletar_tarefa(task_frame_to_remove)
+            self.task_widgets.remove(task_frame_to_remove)'''
 
 # --- Ponto de Entrada da Aplicação ---
 if __name__ == "__main__":
