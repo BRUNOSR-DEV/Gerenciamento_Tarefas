@@ -19,6 +19,7 @@ def conectar():
         print(f'Erro na conexão ao MySql Server: {e}')
 
 
+
 def desconectar(conn):
     """ 
     Função para desconectar do servidor.
@@ -27,12 +28,14 @@ def desconectar(conn):
         conn.close()
 
 
+
 def pega_dados():
     """
     Função que retorna lista de usuarios e seus dados
     """
     conn= conectar()
     cursor = conn.cursor()
+
     cursor.execute('SELECT * FROM usuario')
     usuarios = cursor.fetchall()
 
@@ -44,12 +47,14 @@ def pega_dados():
         return 'Não tem usuários cadastrados'
 
 
+
 def pega_id(usuario): 
     '''função que busca id do usuário no bd e retorna a mesma'''  
     conn = conectar()
     cursor = conn.cursor()
 
-    cursor.execute(f"SELECT id FROM usuario WHERE nome_usuario = '{usuario}'")
+    sql = "SELECT id FROM usuario WHERE nome_usuario = %s" 
+    cursor.execute(sql, (usuario,)) #obs. obrigatório passar uma tupla como parâmetro para cursor
     result = cursor.fetchone()
     desconectar(conn)
 
@@ -64,38 +69,60 @@ def inserir_usuario(usuario, senha):
     """  
     conn = conectar()
     cursor = conn.cursor()
+    sucesso = False
 
+    try:
 
-    cursor.execute(f"INSERT INTO usuario (nome_usuario, senha) VALUES ('{usuario}',{senha})")
-    conn.commit()
+        cursor.execute("INSERT INTO usuario (nome_usuario, senha) VALUES (%s, %s)",(usuario, senha))
+        conn.commit()
+
+        if cursor.rowcount == 1: #retorna o número de linhas afetadas pela última operação executada.
+            print(f'Usuário inserido com sucesso! {usuario}')
+            sucesso = True
+            return sucesso 
+        else:
+            print('Não foi possível inserir usuário no banco de dados! ')
+            sucesso = False
+            return sucesso
+        
+    except Exception as e:
+        print('Erro em inserir usuário {e}')
+        conn.rollback()
+        return None
     
-    if cursor.rowcount == 1: #retorna o número de linhas afetadas pela última operação executada.
+    finally:
         desconectar(conn)
-        return True
-    else:
-        desconectar(conn)
-        return False
-
+    
+    
 
 def inserir_tarefas(descricao, id_usuario, checkbox):
-    """Função que inseri novas tarefas, retornando id da tarefa criada"""
+    
     conn = conectar()
     cursor = conn.cursor()
 
-    cursor.execute(f"INSERT INTO tarefas (descricao, fk_usuario, checkbox) VALUES ('{descricao}', {id_usuario}, {checkbox})")
-    conn.commit()
+    try:
+        # 1. Usar placeholder %s para todos os valores
+        # 2. Passar os valores como uma tupla no segundo argumento de execute()
+        sql = "INSERT INTO tarefas (descricao, fk_usuario, checkbox) VALUES (%s, %s, %s)"
+        cursor.execute(sql, (descricao, id_usuario, checkbox))
+        conn.commit()
+        # Assumindo que você quer o ID da tarefa recém-inserida
+        return cursor.lastrowid # Retorna o ID da última linha inserida
+    
+    except Exception as e: # Captura exceções para depuração
 
-    cursor.execute(f"SELECT id FROM tarefas WHERE descricao='{descricao}' AND fk_usuario= {id_usuario};")
-    result = cursor.fetchone()
-    
-    
-    
-    if cursor.rowcount == 1: #retorna o número de linhas afetadas pela última operação executada.
-        desconectar(conn)
-        return result
-    else:
-        desconectar(conn)
-        return 'ID da tarefa não encontrado no BD - (Inserir_tarefas)'
+        print(f"Erro ao inserir tarefa: {e}")
+        conn.rollback() # Reverte a transação em caso de erro
+        return None # Retorna None para indicar falha
+    finally:
+
+        if cursor.rowcount == 1: #retorna o número de linhas afetadas pela última operação executada.
+            desconectar(conn)
+            print('Tarefa inserida com sucesso!') 
+        else:
+            desconectar(conn)
+            print('ID da tarefa não encontrado no BD - (Inserir_tarefas)')
+
     
     ''' ------outra forma de se fazer---------
     
@@ -113,6 +140,7 @@ def inserir_tarefas(descricao, id_usuario, checkbox):
         return None
     finally:
         conn.close()'''
+
 
 
 def listar_tarefas(id_usuario):
@@ -134,20 +162,33 @@ def listar_tarefas(id_usuario):
 
 
 def deletar_tarefa(tarefa_id):
-
-
+    
     conn = conectar()
     cursor = conn.cursor()
+    sucesso = False 
 
-    descricao = cursor.execute(f'SELECT descricao FROM tarefas WHERE id={tarefa_id}')
-    cursor.execute(f"DELETE FROM tarefas WHERE descricao='{tarefa_id}'")
+    try:
+        print(f"DEBUG: Tentando deletar tarefa com ID: {tarefa_id}") # Para depuração
+        sql = "DELETE FROM tarefas WHERE id = %s" # Espaço após '=' é boa prática, mas não obrigatório
+        cursor.execute(sql, (tarefa_id,))
 
-    if cursor.rowcount == 1: 
-        print(f'Produto {descricao} excluído com sucesso.')
-    else:
-         print(f'Erro ao excluir o produto {descricao}')
+        conn.commit() 
 
-    desconectar(conn)
+        if cursor.rowcount == 1:
+            print(f'Tarefa com ID {tarefa_id} excluída com sucesso do banco de dados.')
+            sucesso = True
+        else:
+            # Isso pode acontecer se o ID não existir no banco de dados
+            print(f'Erro ao excluir tarefa com ID {tarefa_id}. Nenhuma linha afetada ou ID não encontrado.')
+            sucesso = False
+
+    except Exception as e:
+        print(f"DEBUG: Erro inesperado ao tentar deletar tarefa ID {tarefa_id}: {e}")
+        conn.rollback() # Desfaz as alterações em caso de erro
+        sucesso = False
+    finally:
+        desconectar(conn)
+    return sucesso
 
     """ ----------- forma mais correta ------------
 
@@ -166,23 +207,35 @@ def deletar_tarefa(tarefa_id):
         conn.close()"""
 
 
+
 def atualizar_checkbox(tarefa_id, novo_status):
 
     conn = conectar()
     cursor = conn.cursor()
+    sucesso = False
 
+    try:
+        cursor.execute("UPDATE tarefas SET checkbox = %s WHERE id = %s", (novo_status, tarefa_id,))
+        conn.commit()
 
-    cursor.execute(f"UPDATE tarefas SET checkbox = {novo_status} WHERE id = {tarefa_id} ")
-    conn.commit()
+        if cursor.rowcount == 1:
+            #print(f'O checkbox foi atualizado com sucesso.')
+            sucesso = True
+            return sucesso
+        else:
+            #print('Não foi possível atualizar!')
+            sucesso = False
+            return sucesso
+        
+    except Exception as e:
 
-    if cursor.rowcount == 1:
-        #print(f'O checkbox foi atualizado com sucesso.')
+        print(f"DEBUG: Erro inesperado ao tentar atualizar checkbox - ID {tarefa_id}: {e}")
+        conn.rollback()
+
+    finally:
         desconectar(conn)
-        return True
-    else:
-        #print('Não foi possível atualizar!')
-        desconectar(conn)
-        return False
+
+    return sucesso
     
     """------ forma mais correta --------------
 
@@ -200,6 +253,7 @@ def atualizar_checkbox(tarefa_id, novo_status):
         return False
     finally:
         conn.close()"""
+
 
 
 def atualizar():
@@ -243,6 +297,7 @@ def atualizar():
         atualizar()
     else:
         menu()
+
 
 
 def deletar():

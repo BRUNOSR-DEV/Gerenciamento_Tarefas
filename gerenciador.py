@@ -173,7 +173,6 @@ class Registro_usuario(ctk.CTkToplevel):
 
 
 
-
 class Main_app(ctk.CTk):
     def __init__(self, logged_in_username=None):
         super().__init__()
@@ -229,22 +228,24 @@ class Main_app(ctk.CTk):
         self.carregar_bd()
 
 
-        """id_usuario = pega_id(self._app_logged_in_username)
+        """ --- forma antiga -----
+        id_usuario = pega_id(self._app_logged_in_username)
         tamanho = len(listar_tarefas(id_usuario))
 
         for i,v in enumerate(listar_tarefas(id_usuario)):
             self.add_task_widget(v[1], v[0])
             if i+1 == tamanho:
-                break"""
-
-    '''self.add_task_widget("Comprar pão", False)
-        self.add_task_widget("Fazer exercício", True)
-        self.add_task_widget("Reunião às 10h", False)'''
+                break
+                
+            self.add_task_widget("Comprar pão", False)
+            self.add_task_widget("Fazer exercício", True)
+            self.add_task_widget("Reunião às 10h", False)"""
     
     def carregar_bd(self):
 
         
-        """for widget_data in self.task_widgets_data:
+        """ código para quando o método carregar_bd for chamado em outra "situação""
+        for widget_data in self.task_widgets_data:
             widget_data['frame'].destroy()
         self.task_widgets_data.clear() # Limpa a lista interna também"""
 
