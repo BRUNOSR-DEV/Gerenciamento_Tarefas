@@ -151,7 +151,8 @@ def listar_tarefas(id_usuario):
     try:
         # CORREÇÃO: Usar placeholder %s e passar id_usuario como tupla
         cursor.execute("SELECT id, descricao, checkbox FROM tarefas WHERE fk_usuario = %s", (id_usuario,))
-        tarefas = cursor.fetchall() # Use fetchall() para obter todas as linhas
+        tarefas = cursor.fetchall() # fetchall() para obter todas as linhas, retorna tupla de tuplas 
+
         return [(t[0], t[1], t[2]) for t in tarefas] # Se o row_factory não estiver definido, acesse por índice
     except Exception as e: # Capture exceções para depuração
         print(f"Erro ao listar tarefas: {e}")

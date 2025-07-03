@@ -174,15 +174,15 @@ class Registro_usuario(ctk.CTkToplevel):
 
 
 class Main_app(ctk.CTk):
+
     def __init__(self, logged_in_username=None):
         super().__init__()
         self.title("Gerenciador de Tarefas")
         self.geometry("600x500")
 
-        # Solução para o AttributeError: use __dict__ para definir o atributo
-        # E/ou use um nome ligeiramente diferente para evitar conflitos indiretos
-        self.__dict__['_app_logged_in_username'] = logged_in_username
-        self.user_id = pega_id(self._app_logged_in_username)
+        self.__dict__['usuario_logado'] = logged_in_username
+        """ foi uma solução para contornar um possível AttributeError em cenários específicos, garantindo que o atributo seja definido antes de ser acessado por outras partes do CustomTkinter, embora self._app_logged_in_username = logged_in_username funcione na maioria das vezes."""
+        self.user_id = pega_id(self.usuario_logado)
 
         self.grid_rowconfigure(0, weight=0) # Linha para o frame superior (usuário e add tarefa)
         self.grid_rowconfigure(1, weight=1) # Linha para o frame de tarefas rolavel
@@ -191,18 +191,28 @@ class Main_app(ctk.CTk):
         # Frame superior para o nome do usuário e a área de adicionar tarefa
         self.top_section_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.top_section_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
-        self.top_section_frame.grid_columnconfigure(0, weight=1) # Para o label se expandir
+        self.top_section_frame.grid_columnconfigure(0, weight=0) # primeira coluna para label usuário
+        self.top_section_frame.grid_columnconfigure(0, weight=1) # segunda coluna para botão sair
 
         # Label para exibir o nome do usuário
-        if self._app_logged_in_username: 
+        if self.usuario_logado: 
             self.username_label = ctk.CTkLabel(self.top_section_frame,
-                                               text=f"Bem-vindo, {self._app_logged_in_username}!", # <--- E AQUI!
+                                               text=f"Bem-vindo, {self.usuario_logado}!",
                                                font=ctk.CTkFont(size=16, weight="bold"))
+            
         else:
             self.username_label = ctk.CTkLabel(self.top_section_frame,
                                                text="Bem-vindo!",
                                                font=ctk.CTkFont(size=16, weight="bold"))
-        self.username_label.grid(row=0, column=0, pady=(0, 10), sticky="w") # Posicione o label dentro do top_section_frame
+            
+        self.botao_sair = ctk.CTkButton(self.top_section_frame, text="Sair", command=self.voltar_Plogin, width=80,
+                                        fg_color="#FF0000", hover_color="#810000")
+        
+        self.botao_sair.grid(row=0, column=1,sticky="e") #coluna 1 alinhado a direita
+
+        #Primeira Label da janela de tarefas    
+        self.username_label.grid(row=0, column=0, pady=(0, 10), sticky="w")
+        
 
         # Frame para adicionar nova tarefa (dentro do top_section_frame)
         self.add_task_frame = ctk.CTkFrame(self.top_section_frame, fg_color="transparent") # <--- Filho do top_section_frame
@@ -228,23 +238,10 @@ class Main_app(ctk.CTk):
         self.carregar_bd()
 
 
-        """ --- forma antiga -----
-        id_usuario = pega_id(self._app_logged_in_username)
-        tamanho = len(listar_tarefas(id_usuario))
-
-        for i,v in enumerate(listar_tarefas(id_usuario)):
-            self.add_task_widget(v[1], v[0])
-            if i+1 == tamanho:
-                break
-                
-            self.add_task_widget("Comprar pão", False)
-            self.add_task_widget("Fazer exercício", True)
-            self.add_task_widget("Reunião às 10h", False)"""
     
     def carregar_bd(self):
 
-        
-        """ código para quando o método carregar_bd for chamado em outra "situação""
+        """ código para quando o método carregar_bd for chamado em outra 'situação'"
         for widget_data in self.task_widgets_data:
             widget_data['frame'].destroy()
         self.task_widgets_data.clear() # Limpa a lista interna também"""
@@ -256,8 +253,6 @@ class Main_app(ctk.CTk):
         if tarefas:
             for tarefa_id, descricao, status in tarefas: # Assumindo (id, descricao, status)
                 self._cria_add_tarefa(tarefa_id, descricao, status)
-
-
 
 
     def add_tarefa(self): 
@@ -281,7 +276,6 @@ class Main_app(ctk.CTk):
                 print('Erro: Não foi possível salvar a tarefa no banco de dados.')
 
             
-
     def _cria_add_tarefa(self, tarefa_id, tarefa_text, concluida_status):
         """
         Cria e adiciona um widget de tarefa à UI.
@@ -327,6 +321,7 @@ class Main_app(ctk.CTk):
             print(f"Status da tarefa {tarefa_id} atualizado no DB para {novo_status}")
         else:
             print(f"Erro ao atualizar status da tarefa {tarefa_id} no DB.")
+
             if novo_status == 1:
                 checkbox.set(0)
             else:
@@ -344,6 +339,20 @@ class Main_app(ctk.CTk):
 
             '''deletar_tarefa(task_frame_to_remove)
             self.task_widgets.remove(task_frame_to_remove)'''
+
+
+    def voltar_Plogin(self):
+
+        self.username_label.configure(text=f'Tchau, até a próxima {self.usuario_logado} !', text_color='red')
+        self.update_idletasks()
+
+        sleep(3)
+
+        self.destroy()
+        from gerenciador import Login
+
+        login_app = Login()
+        login_app.mainloop()
 
 # --- Ponto de Entrada da Aplicação ---
 if __name__ == "__main__":
