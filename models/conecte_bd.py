@@ -1,6 +1,5 @@
 import MySQLdb
 
-import sqlite3
 
 def conectar():
     """
@@ -256,74 +255,3 @@ def atualizar_checkbox(tarefa_id, novo_status):
         conn.close()"""
 
 
-
-def atualizar():
-    """
-    Função para atualizar um produto
-    """
-    conn = conectar()
-    cursor = conn.cursor()
-
-    listar()
-
-    att = int(input('Informe o id do produto para atualização: '))
-
-    item = int(input('Informe o que vai ser atualizado: \n[1]nome\n[2] preco\n[3]estoque: '))
-
-    if item == 1:
-        valor = input('Informe o novo nome: ') 
-        cursor.execute(f"UPDATE produtos set nome = '{valor}' WHERE id = {att} ")
-        conn.commit()
-    elif item == 2:
-        valor = float(input('Informe o novo preco: '))
-        cursor.execute(f"UPDATE produtos set preco = {valor} WHERE id = {att} ")
-        conn.commit()
-    elif item == 3:
-        valor = int(input('Informe o novo número do estoque: ')) 
-        cursor.execute(f"UPDATE produtos set estoque = {valor} WHERE id = {att} ")
-        conn.commit()
-    else:
-        print('Valor incorreto!')
-        atualizar()
-    
-    if cursor.rowcount == 1:
-        print(f'O dado {valor} foi inserido com sucesso. att bem sucedido')
-    else:
-        print('Não foi possível atualizar o valor.')
-
-    desconectar(conn)
-
-    continuar = input('Quer alterar outro valor? [s]sim [n]Menu')
-    if continuar == 's' or continuar == 'S':
-        atualizar()
-    else:
-        menu()
-
-
-
-def deletar():
-    """
-    Função para deletar um produto
-    """
-    conn = conectar()
-    cursor = conn.cursor()
-
-    codigo = int(input('Informe o id para deletar o item: '))
-
-    cod_verificado = int(input(f'Deseja realmente apagar o produto {busca_nome(codigo)} \n[1]Sim\n[2]Não :'))
-
-    if cod_verificado == 1:
-        cursor.execute(f'DELETE FROM produtos WHERE id={codigo}')
-        conn.commit()
-
-        if cursor.rowcount == 1: 
-            print('Produto excluído com sucesso.')
-        else:
-            print(f'Erro ao excluir o produto {busca_nome(codigo)}')
-        
-            
-    elif cod_verificado == 2:
-        deletar()
-    else:
-        print('Valor não correspondente, ou não existe no banco de dados')
-        deletar()

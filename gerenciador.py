@@ -1,43 +1,16 @@
-from models.gt import pega_dados, inserir_usuario, pega_id, inserir_tarefas, deletar_tarefa, atualizar_checkbox, listar_tarefas
 
+from models.conecte_bd import (
+    pega_dados, inserir_usuario, pega_id, inserir_tarefas, deletar_tarefa, atualizar_checkbox, listar_tarefas
+    )
 from time import sleep
-
-"""
-import PySimpleGUI as sg
-
-def criar_janela_inicial():
-    sg.theme('DarkBlue4')
-    linha = [
-        [sg.Checkbox(''), sg.Input('')],
-    ]
-    layout =  [
-        [sg.Frame('Tarefas',  layout = linha, key='container')],
-        [sg.Button('Nova Tarefa'),sg.Button('Resetar')],
-    ]
-
-    return sg.Window('Todo List', layout=layout, finalize=True)
-
-janela =  criar_janela_inicial()
-
-while True:
-    event, values = janela.read()
-    if event == sg.WIN_CLOSED:
-        break
-    elif event == 'Nova Tarefa':
-        janela.extend_layout(janela['container'],[[sg.Checkbox(''), sg.Input('')]],)
-    elif event ==  'Resetar':
-        janela.close()
-        janela = criar_janela_inicial()"""
-
-
 import customtkinter as ctk
 
-#configurar a aparência
 
+#configurar a aparência
 ctk.set_appearance_mode('dark')
 
-#Criação das funções de funcionalidades
 
+#Criação das funções de funcionalidades
 class Login(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -138,6 +111,7 @@ class Registro_usuario(ctk.CTkToplevel):
 
         self.status_label = ctk.CTkLabel(self, text="", text_color="red")
         self.status_label.grid(row=5, column=0, pady=5)
+
 
     def processar_registro(self):
         
@@ -343,7 +317,7 @@ class Main_app(ctk.CTk):
 
     def voltar_Plogin(self):
 
-        self.username_label.configure(text=f'Tchau, até a próxima {self.usuario_logado} !', text_color='red')
+        self.username_label.configure(text=f'Até a próxima {self.usuario_logado} !', text_color='red')
         self.update_idletasks()
 
         sleep(3)
@@ -353,6 +327,8 @@ class Main_app(ctk.CTk):
 
         login_app = Login()
         login_app.mainloop()
+
+
 
 # --- Ponto de Entrada da Aplicação ---
 if __name__ == "__main__":
