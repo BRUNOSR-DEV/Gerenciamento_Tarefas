@@ -51,14 +51,14 @@ class TestGerenciadorTarefas(unittest.TestCase):
         #criar_tabela_usuarios()
         #criar_tabela_tarefas()
         desconectar(self.conn)
-        print(f"\nConfigurando banco de dados de teste: {TEST_DB_NAME}")
+        print(f"\nConfigurando banco de dados de teste: {self.conn}")
 
     # Este método é executado DEPOIS de CADA teste
     def tearDown(self):
         # Limpa o banco de dados de teste
-        if os.path.exists(TEST_DB_NAME):
-            os.remove(TEST_DB_NAME)
-        print(f"Limpando banco de dados de teste: {TEST_DB_NAME}")
+        if os.path.exists(self.conn):
+            os.remove(self.conn)
+        print(f"Limpando banco de dados de teste: {self.conn}")
 
     def test_inserir_usuario_e_pegar_id(self):
         # Testa se um usuário pode ser inserido e se seu ID pode ser recuperado
@@ -105,7 +105,7 @@ class TestGerenciadorTarefas(unittest.TestCase):
         user_id = pega_id("testuser5")
         tarefa_id = inserir_tarefas("Tarefa para atualizar", user_id, 0)
 
-        self.assertTrue(atualizar_status_tarefa(tarefa_id, 1)) # Atualiza para concluída
+        self.assertTrue(atualizar_checkbox(tarefa_id, 1)) # Atualiza para concluída
 
         tarefas = listar_tarefas(user_id)
         self.assertEqual(tarefas[0][2], 1) # Verifica se o status foi atualizado
