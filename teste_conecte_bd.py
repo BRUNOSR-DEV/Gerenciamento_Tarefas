@@ -19,11 +19,12 @@ def conectar():
             host= 'localhost',
             user= 'hey',
             passwd= 'boney',
+            autocommit=True,
         )
         return conn
 
     except MySQLdb.Error as e:
-        print(f'Erro na conexão ao MySql Server: {e}')
+        print(f'Erro na conexão ao MySql Server de TESTE  : {e}')
 
 def desconectar(conn):
     """ 
@@ -35,8 +36,8 @@ def desconectar(conn):
 
 class TestGerenciadorTarefas(unittest.TestCase):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, methodName= 'runTest'):
+        super().__init__(methodName)
         self.conn= conectar()
 
     # Este método é executado ANTES de CADA teste
