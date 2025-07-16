@@ -9,7 +9,7 @@ from models.conecte_bd import (
     atualizar_checkbox, pega_dados
 )
 
-def conectar():
+def conectar_teste():
     """
     Função para conectar ao servidor
     """
@@ -33,26 +33,36 @@ def desconectar(conn):
     if conn:
         conn.close()
 
+def limpar_tabelas(conn):
+    """
+    Limpa os dados das tabelas de teste.
+    """
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM tarefas")
+        cursor.execute("DELETE FROM usuarios")
+        # Se você tem auto-incremento, pode querer resetar para 1
+        # cursor.execute("ALTER TABLE usuarios AUTO_INCREMENT = 1")
+        # cursor.execute("ALTER TABLE tarefas AUTO_INCREMENT = 1")
+        conn.commit() # Commit das operações de limpeza
+        print("Tabelas de teste limpas.")
+    except MySQLdb.Error as e:
+        print(f"Erro ao limpar tabelas de teste: {e}")
+        conn.rollback()
+        raise # Re-levanta para falhar o teste
 
 class TestGerenciadorTarefas(unittest.TestCase):
 
-    def __init__(self, methodName= 'runTest'):
+    """    def __init__(self, methodName= 'runTest'):
         super().__init__(methodName)
-        self.conn= conectar()
+        self.conn= conectar()"""
 
     # Este método é executado ANTES de CADA teste
     def setUp(self):
-        # Limpa e configura o banco de dados de teste para cada teste
-        if os.path.exists(self.conn):
-            os.remove(self.conn) # Remove o DB anterior para um estado limpo
-        # Sobrescrever conectar para usar o DB de teste
-        # Isso pode ser feito passando o nome do DB para conectar ou mockando
-        # Para simplicidade, vou chamar as funções de criação diretamente
-        self.conn = conectar() # Assumindo que conectar usa TEST_DB_NAME internamente
-        #criar_tabela_usuarios()
-        #criar_tabela_tarefas()
-        desconectar(self.conn)
-        print(f"\nConfigurando banco de dados de teste: {self.conn}")
+        self.conn = conectar_teste()
+        # Limpa as tabelas antes de cada teste para garantir um estado limpo
+        limpar_tabelas(self.conn) 
+        print(f"\n--- Configurando teste: {self._testMethodName} ---")
 
     # Este método é executado DEPOIS de CADA teste
     def tearDown(self):
