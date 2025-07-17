@@ -155,7 +155,7 @@ class Main_app(ctk.CTk):
         self.geometry("600x500")
 
         self.__dict__['usuario_logado'] = logged_in_username
-        """ foi uma solução para contornar um possível AttributeError em cenários específicos, garantindo que o atributo seja definido antes de ser acessado por outras partes do CustomTkinter, embora self._app_logged_in_username = logged_in_username funcione na maioria das vezes."""
+        
         self.user_id = pega_id(self.usuario_logado)
 
         self.grid_rowconfigure(0, weight=0) # Linha para o frame superior (usuário e add tarefa)
