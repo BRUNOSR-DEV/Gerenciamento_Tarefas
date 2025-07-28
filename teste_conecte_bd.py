@@ -4,7 +4,7 @@ import os
 import MySQLdb
 
 from models.conecte_bd import (
-    conectar_bd_original, desconectar, inserir_usuario,
+    desconectar, inserir_usuario,
     inserir_tarefas, pega_id, listar_tarefas, deletar_tarefa,
     atualizar_checkbox, pega_dados
 )
@@ -49,9 +49,9 @@ def limpar_tabelas(conn):
 
 class TestGerenciadorTarefas(unittest.TestCase):
 
-    def __init__(self, methodName= 'runTest'):
+    """def __init__(self, methodName= 'runTest'):
         super().__init__(methodName)
-        self.conn= conectar_teste()
+        self.conn= conectar_teste()"""
 
     # Este método é executado ANTES de CADA teste
     def setUp(self):
