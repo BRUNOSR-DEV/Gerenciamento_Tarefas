@@ -18,7 +18,7 @@ from time import sleep
 import customtkinter as ctk
 
 
-#configurar a aparência
+#configura a aparência
 ctk.set_appearance_mode('dark')
 
 
@@ -53,6 +53,8 @@ class Login(ctk.CTk):
         self.status_label.grid(row=5, column=0, pady=5)
 
     def validar_login(self):
+        """ Valida o login que o usuário inseriu na entry"""
+        
         usuario = self.usuario_entry.get()
         senha = self.senha_entry.get()
         login_sucesso = False

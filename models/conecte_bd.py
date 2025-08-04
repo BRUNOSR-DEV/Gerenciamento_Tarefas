@@ -30,7 +30,7 @@ def desconectar(conn):
 
 def pega_dados(conn=None):
     """
-    Função que retorna lista de usuarios e seus dados
+    Função que retorna lista de usuarios
     """
     gerenciar_conn = False
 
@@ -64,7 +64,7 @@ def pega_dados(conn=None):
 
 
 def pega_id(usuario, conn=None): 
-    '''função que busca id do usuário no bd e retorna a mesma''' 
+    '''função que busca id do usuário no bd, passando o nome do usuário ''' 
 
     gerenciar_conn = False
 
@@ -94,10 +94,9 @@ def pega_id(usuario, conn=None):
 
 
 
-
 def inserir_usuario(usuario, senha, conn=None):
     """
-    Função para inserir um usuário novo
+    Função para inserir um usuário novo completo
     """  
     gerenciar_conn = False
 
@@ -186,6 +185,7 @@ def inserir_tarefas(descricao, id_usuario, checkbox, conn=None):
 
 
 def listar_tarefas(id_usuario, conn=None):
+    """ Função que retorna a lista de tarefas do usuário passando o id do mesmo"""
     
     gerenciar_conn = False
 
@@ -216,6 +216,7 @@ def listar_tarefas(id_usuario, conn=None):
 
 
 def deletar_tarefa(tarefa_id, conn=None):
+    """ Função que deleta uma tarefa da tabela de tarefas, passando id da tarefa"""
 
     gerenciar_conn = False
 
@@ -262,6 +263,7 @@ def deletar_tarefa(tarefa_id, conn=None):
 
 
 def atualizar_checkbox(tarefa_id, novo_status, conn=None):
+    """ Atualiza o status de checkbox no banco de dados """
     
     gerenciar_conn = False
 
