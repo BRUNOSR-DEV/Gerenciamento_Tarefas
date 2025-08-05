@@ -24,6 +24,8 @@ ctk.set_appearance_mode('dark')
 
 #Criação das funções de funcionalidades
 class Login(ctk.CTk):
+    """Classe Login herda de ctk.CTK - configura a interface para receber os dados do usuário e faz a verificação no BD."""
+
     def __init__(self):
         super().__init__()
         self.title('Sistem de Login')
@@ -82,16 +84,19 @@ class Login(ctk.CTk):
     
 
     def abrir_tela_registro(self):
+        """ Direciona o usuário para fazer cadastro chamando a classe Registro_usuario"""
+        
         # Passa a própria instância da tela de login para a tela de registro
         register_window = Registro_usuario(self, login_instance=self)
         #self.status_label.configure(text='Abrindo tela de registro...', text_color='blue')
         
         # A mainloop() não é chamada para toplevels, elas são gerenciadas pelo master.
-        self.wait_window(register_window) # Opcional: Pausa a janela de login até a popup fechar
+        self.wait_window(register_window) #Pausa a janela de login até a popup fechar
 
 
 
 class Registro_usuario(ctk.CTkToplevel):
+    """Classe para registro: configuração a interface para receber dados e a inserção dos dados no BD."""
 
     def __init__(self,  master=None, login_instance=None):
         super().__init__(master)
@@ -128,6 +133,7 @@ class Registro_usuario(ctk.CTkToplevel):
 
 
     def processar_registro(self):
+        """Processa o registro - pega os dados inseridos, verifica e guarda no BD"""
         
         usuario = self.novo_usuario.get().strip()
         senha1 = self.nova_senha.get().strip()
@@ -162,6 +168,7 @@ class Registro_usuario(ctk.CTkToplevel):
 
 
 class Main_app(ctk.CTk):
+    """ Classe Main - app principal, configuração de interface, listamento de tarefas do BD. Intereção com app, atualição, delete, inserção..."""
 
     def __init__(self, logged_in_username=None):
         super().__init__()
@@ -219,7 +226,7 @@ class Main_app(ctk.CTk):
         
         # Frame para conter a lista de tarefas (filho da Main_app, na próxima linha)
         self.tasks_container_frame = ctk.CTkScrollableFrame(self, fg_color="transparent")
-        self.tasks_container_frame.grid(row=1, column=0, padx=10, pady=5, sticky="nsew") # <--- Agora na linha 1 (da Main_app), pois o top_section_frame está na linha 0. A Main_app tem 2 rows principais.
+        self.tasks_container_frame.grid(row=1, column=0, padx=10, pady=5, sticky="nsew")
 
         self.task_widgets_data = []
 
@@ -228,6 +235,7 @@ class Main_app(ctk.CTk):
 
     
     def carregar_bd(self):
+        """ Busca as tarefas do usuário que fez o login, passando o id do mesmo"""
 
         """ código para quando o método carregar_bd for chamado em outra 'situação'"
         for widget_data in self.task_widgets_data:
@@ -249,18 +257,13 @@ class Main_app(ctk.CTk):
         tarefa_text = self.tarefa_entry.get().strip()
 
         if tarefa_text:
-            # 1. Inserir a nova tarefa no banco de dados
-            # Assumindo que inserir_tarefas retorna o ID da tarefa recém-criada
-            # e que o status inicial é 0 (não concluída)
 
             nova_tarefa_id = inserir_tarefas(tarefa_text, self.user_id, 0)
 
             if nova_tarefa_id:
-                # 2. Se a inserção no banco foi bem-sucedida, adicione o widget
-                self._cria_add_tarefa(nova_tarefa_id, tarefa_text, 0)
-                self.tarefa_entry.delete(0, ctk.END) # Limpa o campo apenas se salvou no DB
+                self._cria_add_tarefa(nova_tarefa_id, tarefa_text, 0)# só aparece a tarefa na interface se salvou no BD
+                self.tarefa_entry.delete(0, ctk.END) # Limpa o campo entry apenas se salvou no BD
             else:
-                # Você pode adicionar uma mensagem de erro na UI aqui
                 print('Erro: Não foi possível salvar a tarefa no banco de dados.')
 
             
@@ -273,8 +276,6 @@ class Main_app(ctk.CTk):
         task_frame = ctk.CTkFrame(self.tasks_container_frame, fg_color="transparent")
         task_frame.pack(fill="x", pady=2)
 
-        # Usar IntVar para o checkbox permite rastrear seu estado facilmente
-        # e ligar a uma função de comando
         var_checkbox = ctk.IntVar(value=concluida_status)
         checkbox = ctk.CTkCheckBox(task_frame, text=tarefa_text, variable=var_checkbox,
                                    command=lambda tid=tarefa_id, cb_var=var_checkbox: self.status_tarefa(tid, cb_var))
