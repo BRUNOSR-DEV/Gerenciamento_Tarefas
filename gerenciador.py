@@ -96,7 +96,7 @@ class Login(ctk.CTk):
 
 
 class Registro_usuario(ctk.CTkToplevel):
-    """Classe para registro: configuração a interface para receber dados e a inserção dos dados no BD."""
+    """Classe para registro: configuração da interface para receber dados e a inserção dos dados no BD. (inserir_usuario)"""
 
     def __init__(self,  master=None, login_instance=None):
         super().__init__(master)
@@ -168,7 +168,7 @@ class Registro_usuario(ctk.CTkToplevel):
 
 
 class Main_app(ctk.CTk):
-    """ Classe Main - app principal, configuração de interface, listamento de tarefas do BD. Intereção com app, atualição, delete, inserção..."""
+    """ Classe Main - app principal, configuração de interface, listamento de tarefas do BD. Intereção com app, atualição, delete, inserção... (CRUD)"""
 
     def __init__(self, logged_in_username=None):
         super().__init__()

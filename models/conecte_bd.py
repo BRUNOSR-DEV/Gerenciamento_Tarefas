@@ -138,6 +138,8 @@ def inserir_usuario(usuario, senha, conn=None):
     
 
 def inserir_tarefas(descricao, id_usuario, checkbox, conn=None):
+    """ Função que inseri a tarefa no BD e retorna o id da mesma"""
+    
     gerenciar_conn = False
     if conn is None:
         conn = conectar_bd_original()
