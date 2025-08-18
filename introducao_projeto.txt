@@ -1,0 +1,42 @@
+Gerenciador de Tarefas: Uma Introdução ao Projeto
+
+    Este projeto é um Gerenciador de Tarefas desenvolvido em Python, com o objetivo de fornecer
+    uma solução simples e eficaz para a organização pessoal. A aplicação foi construída com foco 
+    na separação de responsabilidades e na utilização de ferramentas modernas para garantir 
+    um código limpo e funcional.
+
+Componentes Chave:
+    O projeto é composto por três pilares principais, que trabalham em conjunto para oferecer 
+    todas as funcionalidades
+
+Interface Gráfica (CustomTkinter): 
+
+    A interface do usuário foi criada utilizando a biblioteca CustomTkinter, uma extensão 
+    do Tkinter que oferece um design moderno e personalizável. Ela é responsável por toda 
+    a experiência visual do usuário, desde a tela de login até a exibição e manipulação 
+    das tarefas.
+
+Banco de Dados (MySQL): 
+
+    O MySQL foi escolhido para o armazenamento persistente dos dados. Ele é a espinha dorsal 
+    do projeto, garantindo que as informações de usuários e tarefas sejam salvas de forma 
+    segura e acessível. A aplicação interage com o banco de dados para realizar todas as 
+    operações essenciais, como criar, ler, atualizar e deletar dados (CRUD).
+
+Estrutura de Código: 
+
+    O código-fonte foi organizado para facilitar o desenvolvimento e a manutenção.
+
+A pasta models contém o módulo conecte_bd, que atua como a camada de comunicação com o banco 
+de dados. Ele abriga todas as funções que realizam as operações de CRUD, isolando a lógica 
+de negócios da interface gráfica.
+
+
+O arquivo gerenciador.py é o ponto de entrada da aplicação. Ele contém as classes principais 
+que gerenciam a interface gráfica, a lógica de interação do usuário e a integração com o 
+banco de dados.
+
+
+Todo o projeto foi desenvolvido dentro de um ambiente virtual chamado vir_gt. Isso garante 
+que todas as dependências e bibliotecas estejam isoladas e que o projeto seja facilmente 
+reproduzível em qualquer máquina, sem conflitos de versão.

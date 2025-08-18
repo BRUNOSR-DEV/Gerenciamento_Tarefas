@@ -1,11 +1,11 @@
 """
- ------------------ Introdução do projeto ------------------------
+ ------------------ Introdução resumida do projeto ------------------------
 
  - A app utiliza a biblioteca CustomTkinter como interface gráfica. 
  - Utiliza também MySQL como banco de dados.
  - Todos recursos/bibliotecas foram instalados no ambiente virtual (vir_gt).
- - A pasta "models.py" contem o arquivo "conecte_bd" que faz a conexão com banco de dados, realizando as operações necessárias.
- - O "gerenciador.py" é o arquivo de main de execução do programa, com todas as classes e métodos necessários para execução do programa...
+ - A pasta "models.py" contem o arquivo "conecte_bd" que faz a conexão com banco de dados, realizando as operações (CRUD).
+ - O "gerenciador.py" é o arquivo main de execução do programa, com todas as classes e métodos necessários para execução do programa...
 ----------------------------------------------------------------------
 
 """
@@ -22,7 +22,6 @@ import customtkinter as ctk
 ctk.set_appearance_mode('dark')
 
 
-#Criação das funções de funcionalidades
 class Login(ctk.CTk):
     """Classe Login herda de ctk.CTK - configura a interface para receber os dados do usuário e faz a verificação no BD."""
 
@@ -191,12 +190,12 @@ class Main_app(ctk.CTk):
 
         # Label para exibir o nome do usuário
         if self.usuario_logado: 
-            self.username_label = ctk.CTkLabel(self.top_section_frame,
+            self.nomeusuario_label = ctk.CTkLabel(self.top_section_frame,
                                                text=f"Bem-vindo, {self.usuario_logado}!",
                                                font=ctk.CTkFont(size=16, weight="bold"))
             
         else:
-            self.username_label = ctk.CTkLabel(self.top_section_frame,
+            self.nomeusuario_label = ctk.CTkLabel(self.top_section_frame,
                                                text="Bem-vindo!",
                                                font=ctk.CTkFont(size=16, weight="bold"))
             
@@ -206,7 +205,7 @@ class Main_app(ctk.CTk):
         self.botao_sair.grid(row=0, column=1,sticky="e") #coluna 1 alinhado a direita
 
         #Primeira Label da janela de tarefas    
-        self.username_label.grid(row=0, column=0, pady=(0, 10), sticky="w")
+        self.nomeusuario_label.grid(row=0, column=0, pady=(0, 10), sticky="w")
         
 
         # Frame para adicionar nova tarefa (dentro do top_section_frame)
@@ -221,30 +220,28 @@ class Main_app(ctk.CTk):
                                         fg_color="#006400", hover_color="#008000")
         self.add_button.pack(side="right")
 
-        self.bind("<Return>", lambda event: self.add_button.invoke()) # Bind do Enter aqui
+        self.bind("<Return>", lambda event: self.add_button.invoke()) # Bind do Enter aqui (Associa a tecla Enter à ação de clicar no botão "Adicionar")
 
         
         # Frame para conter a lista de tarefas (filho da Main_app, na próxima linha)
         self.tasks_container_frame = ctk.CTkScrollableFrame(self, fg_color="transparent")
         self.tasks_container_frame.grid(row=1, column=0, padx=10, pady=5, sticky="nsew")
 
-        self.task_widgets_data = []
+        self.task_widgets_data = [] # Inicializa uma lista para armazenar dados sobre cada tarefa (ID do banco de dados, widgets, etc.)
 
-        self.carregar_bd()
+        self.carregar_bd() # Chama o método para buscar e exibir as tarefas existentes do usuário no banco de dados.
 
 
     
     def carregar_bd(self):
-        """ Busca as tarefas do usuário que fez o login, passando o id do mesmo"""
+        """ Este método é responsável por buscar as tarefas do usuário lagado no banco de dados e exibi-las na interface. Necessário passar id do usuário..."""
 
         """ código para quando o método carregar_bd for chamado em outra 'situação'"
         for widget_data in self.task_widgets_data:
             widget_data['frame'].destroy()
         self.task_widgets_data.clear() # Limpa a lista interna também"""
 
-        tarefas = listar_tarefas(self.user_id)
-        print(self.user_id)
-        print(tarefas)
+        tarefas = listar_tarefas(self.user_id) #método que retorna uma lista de tarefas
 
         if tarefas:
             for tarefa_id, descricao, status in tarefas: # Assumindo (id, descricao, status)
@@ -252,7 +249,7 @@ class Main_app(ctk.CTk):
 
 
     def add_tarefa(self): 
-        '''Pega tarefa inserida no entry e manda para função ...widget, salva tarefa no banco de dados'''
+        '''Pega tarefa inserida no entry e manda para a função ...widget, salva tarefa no banco de dados'''
 
         tarefa_text = self.tarefa_entry.get().strip()
 
@@ -302,6 +299,7 @@ class Main_app(ctk.CTk):
 
 
     def status_tarefa(self, tarefa_id, checkbox):
+        """ Este método lida com a atualização do status da tarefa quando o checkbox é marcado ou desmarcado."""
 
         novo_status = checkbox.get() # 1 se marcado, 0 se desmarcado
         print(f"Tarefa ID: {tarefa_id}, Novo Status: {novo_status}")
@@ -318,7 +316,8 @@ class Main_app(ctk.CTk):
 
 
     def remove_tarefa(self, tarefa_id_remove, tarefa_frame_remove):
-        
+        """Este método é chamado quando o botão "X" de uma tarefa é clicado. Apaga do BD e depois da interface."""
+
         if deletar_tarefa(tarefa_id_remove):
             tarefa_frame_remove.destroy()
             self.task_widgets_data = [item for item in self.task_widgets_data if item['id'] != tarefa_id_remove]
@@ -326,11 +325,10 @@ class Main_app(ctk.CTk):
         else:
             print(f"Erro ao remover tarefa ID: {tarefa_id_remove} do banco de dados.")
 
-            '''deletar_tarefa(task_frame_to_remove)
-            self.task_widgets.remove(task_frame_to_remove)'''
 
 
     def voltar_Plogin(self):
+        """ Método para voltar para a tela de login (botão 'Sair')"""
 
         self.username_label.configure(text=f'Até a próxima {self.usuario_logado} !', text_color='red')
         self.update_idletasks()
