@@ -1,16 +1,53 @@
 import MySQLdb
 
+import configparser
+
+
+def ler_configuracao_bd():
+    """Lê as credenciais do banco de dados do arquivo config.ini."""
+    config = configparser.ConfigParser()
+    
+    # Tenta ler o arquivo de configuração
+    try:
+        config.read('config.ini')
+        if 'mysql' not in config:
+            raise ValueError("Seção [mysql] não encontrada em config.ini")
+            
+        db_config = config['mysql']
+        return {
+            'host': db_config.get('host', 'localhost'),
+            'user': db_config.get('user'),
+            'passwd': db_config.get('passwd'),
+            'db': db_config.get('db')
+        }
+    except FileNotFoundError:
+        print("Erro: Arquivo 'config.ini' não encontrado.")
+        return None
+    except ValueError as e:
+        print(f"Erro de configuração: {e}")
+        return None
+    except Exception as e:
+        print(f"Erro inesperado ao ler o arquivo de configuração: {e}")
+        return None
+
+
 
 def conectar_bd_original():
     """
     Função para conectar ao servidor
     """
+    db_config = ler_configuracao_bd()
+    if not db_config:
+        # Se as credenciais não puderam ser lidas, não tente conectar
+        print("Não foi possível conectar ao banco de dados devido a um erro de configuração.")
+        return None
+    
     try:
         conn = MySQLdb.connect(
-            db= 'gerenciador_tarefas',
-            host= 'localhost',
-            user= 'hey',
-            passwd= 'boney',
+            db=db_config['db'],
+            host=db_config['host'],
+            user=db_config['user'],
+            passwd=db_config['passwd']
         )
         return conn
 

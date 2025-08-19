@@ -330,7 +330,7 @@ class Main_app(ctk.CTk):
     def voltar_Plogin(self):
         """ Método para voltar para a tela de login (botão 'Sair')"""
 
-        self.username_label.configure(text=f'Até a próxima {self.usuario_logado} !', text_color='red')
+        self.nomeusuario_label.configure(text=f'Até a próxima {self.usuario_logado} !', text_color='red')
         self.update_idletasks()
 
         sleep(3)
