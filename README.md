@@ -32,18 +32,15 @@ assets/: Arquivos de imagem e ícones do projeto.
 Clone o repositório:
 
 Bash
-
 git clone https://github.com/BRUNOSR-DEV/GERENCIADOR_TAREFAS.git
 Ative o ambiente virtual:
 
 Bash
-
-# No Windows
+No Windows
 .\vir_gt\Scripts\activate
 Instale as dependências:
 
 Bash
-
 pip install customtkinter mysql-connector-python
 Configure o Banco de Dados:
 Certifique-se de que o MySQL está rodando e configure as credenciais no arquivo config.ini.
@@ -51,5 +48,4 @@ Certifique-se de que o MySQL está rodando e configure as credenciais no arquivo
 Execute:
 
 Bash
-
 python gerenciador.py
