@@ -1,7 +1,7 @@
-📝 Gerenciador de Tarefas (Desktop App)
+# 📝 Gerenciador de Tarefas (Desktop App)
 Este é um projeto de aplicação desktop para gerenciamento de tarefas, focado em praticar operações de CRUD (Create, Read, Update, Delete) e persistência de dados com MySQL.
 
-🚀 Funcionalidades
+ # 🚀 Funcionalidades
 Cadastro de Usuários: Interface para novos usuários.
 
 Gestão de Tasks: Adicionar, listar e deletar tarefas vinculadas ao banco de dados.
@@ -10,7 +10,7 @@ Interface Moderna: Utilização da biblioteca customtkinter para um visual Dark 
 
 Arquitetura Modular: Separação de responsabilidades entre lógica de interface (gerenciador.py) e conexão com banco (conecte_bd.py).
 
-🛠 Tecnologias e Bibliotecas
+# 🛠 Tecnologias e Bibliotecas
 Linguagem: Python 3.11
 
 Interface Gráfica: CustomTkinter
@@ -19,7 +19,7 @@ Banco de Dados: MySQL
 
 Ambiente Virtual: venv (vir_gt)
 
-📁 Estrutura do Projeto
+# 📁 Estrutura do Projeto
 gerenciador.py: Ponto de entrada da aplicação e lógica da UI.
 
 models/conecte_bd.py: Funções de manipulação de dados (queries SQL).
@@ -28,7 +28,7 @@ config.ini: Configurações de ambiente e banco de dados.
 
 assets/: Arquivos de imagem e ícones do projeto.
 
-🔧 Como Rodar o Projeto
+# 🔧 Como Rodar o Projeto
 Clone o repositório:
 
 Bash
