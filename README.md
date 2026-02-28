@@ -50,7 +50,7 @@ Bash
 .\vir_gt\Scripts\activate
 pip install customtkinter mysql-connector-python
 Validação de Infraestrutura:
-Antes de iniciar o app, rode o script de teste para garantir que suas credenciais no config.ini estão corretas:
+Antes de iniciar o app, rode o script de teste para garantir que suas credenciais no config.ini.example estão corretas:
 
 Bash
 
