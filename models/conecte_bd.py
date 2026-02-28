@@ -1,11 +1,21 @@
 import MySQLdb
 
-import configparser
+import configparser # Modulo nativo do Py. Ele cria, lê,atualiza e gerencia arq/ de conf/
 
 
 def ler_configuracao_bd():
-    """Lê as credenciais do banco de dados do arquivo config.ini."""
-    config = configparser.ConfigParser()
+    """
+    Lê as credenciais do banco de dados do arquivo 'config.ini'.
+    
+    Busca pela seção [mysql] para garantir que as credenciais 
+    não fiquem expostas no código-fonte (Pratica de de segurança).
+    
+    Returns:
+        dict: Dicionário contendo host, user, passwd e db se sucesso.
+        None: Caso o arquivo não exista ou a seção esteja ausente.
+    """
+
+    config = configparser.ConfigParser() # Instanciando o objeto config
     
     # Tenta ler o arquivo de configuração
     try:
@@ -13,12 +23,12 @@ def ler_configuracao_bd():
         if 'mysql' not in config:
             raise ValueError("Seção [mysql] não encontrada em config.ini")
             
-        db_config = config['mysql']
+        bd_config = config['mysql']
         return {
-            'host': db_config.get('host', 'localhost'),
-            'user': db_config.get('user'),
-            'passwd': db_config.get('passwd'),
-            'db': db_config.get('db')
+            'host': bd_config.get('host', 'localhost'), # se não for "host" define como "localhost"
+            'user': bd_config.get('user'),
+            'passwd': bd_config.get('passwd'),
+            'db': bd_config.get('db')
         }
     except FileNotFoundError:
         print("Erro: Arquivo 'config.ini' não encontrado.")
@@ -34,20 +44,25 @@ def ler_configuracao_bd():
 
 def conectar_bd_original():
     """
-    Função para conectar ao servidor
+    Estabelece a conexão com o servidor MySQL utilizando as credenciais.
+    
+    Returns:
+        MySQLdb.connections.Connection: Objeto de conexão se bem-sucedido.
+        None: Em caso de falha de leitura de configuração ou recusa do servidor.
     """
-    db_config = ler_configuracao_bd()
-    if not db_config:
+
+    bd_config = ler_configuracao_bd()
+    if not bd_config:
         # Se as credenciais não puderam ser lidas, não tente conectar
         print("Não foi possível conectar ao banco de dados devido a um erro de configuração.")
         return None
     
     try:
         conn = MySQLdb.connect(
-            db=db_config['db'],
-            host=db_config['host'],
-            user=db_config['user'],
-            passwd=db_config['passwd']
+            db=bd_config['db'],
+            host=bd_config['host'],
+            user=bd_config['user'],
+            passwd=bd_config['passwd']
         )
         return conn
 
@@ -58,7 +73,10 @@ def conectar_bd_original():
 
 def desconectar(conn):
     """ 
-    Função para desconectar do servidor.
+    Encerra a conexão com o banco de dados de forma segura.
+    
+    Args:
+        conn (MySQLdb.connections.Connection): A conexão ativa atual.
     """
     if conn:
         conn.close()
@@ -67,15 +85,24 @@ def desconectar(conn):
 
 def pega_dados(conn=None):
     """
-    Função que retorna lista de usuarios
+    Busca todos os usuários cadastrados no banco de dados.
+    
+    Args:
+        conn (MySQLdb.connections.Connection, optional): Conexão ativa com o banco. 
+            Se não fornecida, a função abre e gerencia sua própria conexão.
+
+    Returns:
+        list: Lista de tuplas com os dados dos usuários. Retorna uma lista vazia [] 
+              se não houver usuários ou em caso de falha não-crítica.
     """
+
     gerenciar_conn = False
 
     if conn is None:
         conn= conectar_bd_original()
         gerenciar_conn = True
 
-    cursor = conn.cursor()
+    cursor = conn.cursor() # Mensageiro, passa o comando e retorna resltados
 
     try:
         cursor.execute('SELECT * FROM usuario')
@@ -85,7 +112,6 @@ def pega_dados(conn=None):
             return usuarios
         else:
             return []
-            return 'Não tem usuários cadastrados'
         
     except MySQLdb.Error as e: # Captura erro específico do MySQL
         print(f'Erro no MySQL ao pegar dados: {e}')
@@ -101,7 +127,17 @@ def pega_dados(conn=None):
 
 
 def pega_id(usuario, conn=None): 
-    '''função que busca id do usuário no bd, passando o nome do usuário ''' 
+    """
+    Busca o ID (Chave Primária) de um usuário específico pelo nome.
+    
+    Args:
+        usuario (str): Nome do usuário a ser pesquisado.
+        conn (MySQLdb.connections.Connection, optional): Conexão ativa com o banco.
+
+    Returns:
+        int: ID do usuário se encontrado.
+        None: Caso o usuário não exista ou ocorra um erro na query.
+    """
 
     gerenciar_conn = False
 
@@ -120,7 +156,7 @@ def pega_id(usuario, conn=None):
             return result[0]
         
     except MySQLdb.Error as e:
-        print(f"Erro MySQL ao pegar ID: {e}")
+        print(f"Erro MySQL ao buscar ID do usuário '{usuario}': {e}")
         return None # Retorna None em caso de erro no DB  
     except Exception as e:
         print(f"Erro inesperado ao pegar ID: {e}")
@@ -133,8 +169,17 @@ def pega_id(usuario, conn=None):
 
 def inserir_usuario(usuario, senha, conn=None):
     """
-    Função para inserir um usuário novo completo
-    """  
+    Cadastra um novo usuário no banco de dados.
+    
+    Args:
+        usuario (str): Nome do novo usuário.
+        senha (str): Senha do usuário.
+        conn (MySQLdb.connections.Connection, optional): Conexão ativa com o banco.
+
+    Returns:
+        bool: True se o cadastro foi realizado com sucesso, False caso contrário.
+    """
+
     gerenciar_conn = False
 
     if conn is None:
@@ -175,7 +220,19 @@ def inserir_usuario(usuario, senha, conn=None):
     
 
 def inserir_tarefas(descricao, id_usuario, checkbox, conn=None):
-    """ Função que inseri a tarefa no BD e retorna o id da mesma"""
+    """
+    Insere uma nova tarefa no banco de dados vinculada a um usuário.
+    
+    Args:
+        descricao (str): O texto descritivo da tarefa.
+        id_usuario (int): O ID do usuário dono da tarefa (Chave Estrangeira).
+        checkbox (int/bool): Status inicial da tarefa (ex: 0 para pendente, 1 para concluída).
+        conn (MySQLdb.connections.Connection, optional): Conexão ativa com o banco.
+
+    Returns:
+        int: O ID da tarefa recém-inserida (útil para a interface gráfica).
+        None: Em caso de falha na inserção.
+    """
     
     gerenciar_conn = False
     if conn is None:
@@ -203,28 +260,22 @@ def inserir_tarefas(descricao, id_usuario, checkbox, conn=None):
         if gerenciar_conn:
             desconectar(conn)
 
-    
-    ''' ------outra forma de se fazer---------
-    
-    def inserir_tarefas(descricao_tarefa, id_usuario, status_concluida):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("INSERT INTO tarefas (descricao, id_usuario, concluida) VALUES (?, ?, ?)",
-                       (descricao_tarefa, id_usuario, status_concluida))
-        conn.commit()
-        return cursor.lastrowid # Retorna o ID da última linha inserida
-    except sqlite3.Error as e:
-        print(f"Erro ao inserir tarefa: {e}")
-        conn.rollback()
-        return None
-    finally:
-        conn.close()'''
+
 
 
 
 def listar_tarefas(id_usuario, conn=None):
-    """ Função que retorna a lista de tarefas do usuário passando o id do mesmo"""
+    """
+    Retorna a lista de tarefas associadas a um usuário específico.
+    
+    Args:
+        id_usuario (int): O ID do usuário logado.
+        conn (MySQLdb.connections.Connection, optional): Conexão ativa com o banco.
+
+    Returns:
+        list: Lista de tuplas contendo (id, descricao, checkbox) de cada tarefa.
+              Retorna uma lista vazia [] se não houver tarefas ou se ocorrer erro.
+    """
     
     gerenciar_conn = False
 
@@ -235,7 +286,6 @@ def listar_tarefas(id_usuario, conn=None):
     cursor = conn.cursor()
 
     try:
-        # CORREÇÃO: Usar placeholder %s e passar id_usuario como tupla
         cursor.execute("SELECT id, descricao, checkbox FROM tarefas WHERE fk_usuario = %s", (id_usuario,))
         tarefas = cursor.fetchall() # fetchall() para obter todas as linhas, retorna tupla de tuplas 
 
@@ -255,7 +305,16 @@ def listar_tarefas(id_usuario, conn=None):
 
 
 def deletar_tarefa(tarefa_id, conn=None):
-    """ Função que deleta uma tarefa da tabela de tarefas, passando id da tarefa"""
+    """
+    Remove uma tarefa do banco de dados utilizando seu ID.
+
+    Args:
+        tarefa_id (int): O ID da tarefa a ser deletada.
+        conn (MySQLdb.connections.Connection, optional): Conexão ativa com o banco.
+
+    Returns:
+        bool: True se a tarefa foi deletada com sucesso, False caso contrário.
+    """
 
     gerenciar_conn = False
 
@@ -283,26 +342,21 @@ def deletar_tarefa(tarefa_id, conn=None):
         if gerenciar_conn:
             desconectar(conn)
 
-    """ ----------- forma mais correta ------------
-
-    def deletar_tarefa(id_tarefa):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("DELETE FROM tarefas WHERE id = ?", (id_tarefa,))
-        conn.commit()
-        return True
-    except sqlite3.Error as e:
-        print(f"Erro ao deletar tarefa: {e}")
-        conn.rollback()
-        return False
-    finally:
-        conn.close()"""
 
 
 
 def atualizar_checkbox(tarefa_id, novo_status, conn=None):
-    """ Atualiza o status de checkbox no banco de dados """
+    """
+    Atualiza o status de conclusão (checkbox) de uma tarefa.
+
+    Args:
+        tarefa_id (int): O ID da tarefa.
+        novo_status (int/bool): O novo valor (ex: 1 para checado, 0 para desmarcado).
+        conn (MySQLdb.connections.Connection, optional): Conexão ativa com o banco.
+
+    Returns:
+        bool: True se a atualização foi bem-sucedida, False caso contrário.
+    """
     
     gerenciar_conn = False
 
@@ -328,21 +382,5 @@ def atualizar_checkbox(tarefa_id, novo_status, conn=None):
         if gerenciar_conn:
             desconectar(conn)
     
-    """------ forma mais correta --------------
-
-    def atualizar_status_tarefa(id_tarefa, status_concluida):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("UPDATE tarefas SET concluida = ? WHERE id = ?",
-                       (status_concluida, id_tarefa))
-        conn.commit()
-        return True
-    except sqlite3.Error as e:
-        print(f"Erro ao atualizar status: {e}")
-        conn.rollback()
-        return False
-    finally:
-        conn.close()"""
 
 

@@ -1,51 +1,62 @@
 # 📝 Gerenciador de Tarefas (Desktop App)
-Este é um projeto de aplicação desktop para gerenciamento de tarefas, focado em praticar operações de CRUD (Create, Read, Update, Delete) e persistência de dados com MySQL.
+Aplicação desktop para gerenciamento de tarefas, desenvolvida para demonstrar proficiência em Engenharia de Software, Modelagem de Dados Relacional e interfaces gráficas modernas com Python.
 
- # 🚀 Funcionalidades
-Cadastro de Usuários: Interface para novos usuários.
+# 🏗️ Arquitetura e Modelagem (MER)
+Diferente de scripts simples, este projeto foi precedido por uma etapa de design de banco de dados.
 
-Gestão de Tasks: Adicionar, listar e deletar tarefas vinculadas ao banco de dados.
+Modelo Entidade-Relacionamento: Localizado na pasta modelo_ER/, o projeto conta com um diagrama (.mwb e .png) que define as relações entre usuários e tarefas.
 
-Interface Moderna: Utilização da biblioteca customtkinter para um visual Dark Mode profissional.
+Normalização: Estrutura planejada para garantir a integridade referencial e performance nas consultas MySQL.
 
-Arquitetura Modular: Separação de responsabilidades entre lógica de interface (gerenciador.py) e conexão com banco (conecte_bd.py).
+# 🚀 Funcionalidades Principais
+Sistema de Login & Cadastro: Fluxo completo de autenticação de usuários.
+
+Gestão Dinâmica de Tasks: Operações de CRUD (Criar, Ler, Atualizar e Deletar) vinculadas em tempo real ao MySQL.
+
+Interface Dark Mode: Desenvolvida com customtkinter para uma experiência de usuário (UX) moderna e fluida.
+
+Robustez de Conexão: Implementação de tratamento de erros e logs para falhas de banco de dados.
 
 # 🛠 Tecnologias e Bibliotecas
-Linguagem: Python 3.11
+Core: Python 3.11
 
-Interface Gráfica: CustomTkinter
+UI/UX: CustomTkinter
 
-Banco de Dados: MySQL
+Database: MySQL 8.0
 
-Ambiente Virtual: venv (vir_gt)
+Connector: mysql-connector-python
 
-# 📁 Estrutura do Projeto
-gerenciador.py: Ponto de entrada da aplicação e lógica da UI.
+DevOps/Infra: configparser (para gestão de credenciais via config.ini) e venv.
 
-models/conecte_bd.py: Funções de manipulação de dados (queries SQL).
+# 📁 Destaques da Estrutura
+gerenciador.py: Ponto de entrada e controlador da interface.
 
-config.ini: Configurações de ambiente e banco de dados.
+models/conecte_bd.py: Camada de persistência (Data Access Object).
 
-assets/: Arquivos de imagem e ícones do projeto.
+teste_conecte_bd.py: Script de Diagnóstico independente para validar a saúde da conexão com o banco de dados antes da execução do sistema.
 
-# 🔧 Como Rodar o Projeto
+utils/helper.py: Funções utilitárias reutilizáveis para lógica de apoio.
+
+# 🔧 Instalação e Testes
 Clone o repositório:
 
 Bash
+
 git clone https://github.com/BRUNOSR-DEV/GERENCIADOR_TAREFAS.git
-Ative o ambiente virtual:
+Prepare o Ambiente:
 
 Bash
-No Windows
+
 .\vir_gt\Scripts\activate
-Instale as dependências:
-
-Bash
 pip install customtkinter mysql-connector-python
-Configure o Banco de Dados:
-Certifique-se de que o MySQL está rodando e configure as credenciais no arquivo config.ini.
-
-Execute:
+Validação de Infraestrutura:
+Antes de iniciar o app, rode o script de teste para garantir que suas credenciais no config.ini estão corretas:
 
 Bash
+
+python teste_conecte_bd.py
+Execução:
+
+Bash
+
 python gerenciador.py

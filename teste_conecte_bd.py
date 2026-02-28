@@ -3,23 +3,29 @@ import unittest
 import os
 import MySQLdb
 
+
 from models.conecte_bd import (
     desconectar, inserir_usuario,
     inserir_tarefas, pega_id, listar_tarefas, deletar_tarefa,
-    atualizar_checkbox, pega_dados
+    atualizar_checkbox, pega_dados, ler_configuracao_bd
 )
 
 def conectar_teste():
     """
     Função para conectar ao servidor
     """
+    bd_config = ler_configuracao_bd()
+    if not bd_config:
+        # Se as credenciais não puderam ser lidas, não tente conectar
+        print("Não foi possível conectar ao banco de dados devido a um erro de configuração.")
+        return None
+
     try:
         conn = MySQLdb.connect(
-            db= 'teste_bd_gerenciador_tarefas',
-            host= 'localhost',
-            user= 'hey',
-            passwd= 'boney',
-            autocommit=True,
+            db=bd_config['db'],
+            host=bd_config['host'],
+            user=bd_config['user'],
+            passwd=bd_config['passwd']
         )
         return conn
 
