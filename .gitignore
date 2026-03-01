@@ -1,5 +1,6 @@
 # Configurações sensíveis
 config.ini
+teste_config.ini
 
 # Ambientes virtuais
 vir_gt/

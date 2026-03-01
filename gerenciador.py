@@ -1,18 +1,13 @@
 """
- ------------------ Introdução resumida do projeto ------------------------
+Módulo Principal - Gerenciador de Tarefas (GUI).
 
- - A app utiliza a biblioteca CustomTkinter como interface gráfica. 
- - Utiliza também MySQL como banco de dados.
- - Todos recursos/bibliotecas foram instalados no ambiente virtual (vir_gt).
- - A pasta "models.py" contem o arquivo "conecte_bd" que faz a conexão com banco de dados, realizando as operações (CRUD).
- - O "gerenciador.py" é o arquivo main de execução do programa, com todas as classes e métodos necessários para execução do programa...
-----------------------------------------------------------------------
-
+Responsável pela Interface Gráfica utilizando CustomTkinter e pela orquestração
+das operações de CRUD consumindo o módulo 'models.conecte_bd'.
 """
 
 #import dos métodos para conexão 
 from models.conecte_bd import (
-    pega_dados, inserir_usuario, pega_id, inserir_tarefas, deletar_tarefa, atualizar_checkbox, listar_tarefas
+    verifica_login, inserir_usuario, pega_id, inserir_tarefas, deletar_tarefa, atualizar_checkbox, listar_tarefas
     )
 from time import sleep
 import customtkinter as ctk
@@ -23,11 +18,16 @@ ctk.set_appearance_mode('dark')
 
 
 class Login(ctk.CTk):
-    """Classe Login herda de ctk.CTK - configura a interface para receber os dados do usuário e faz a verificação no BD."""
+    """
+    Interface de Autenticação de Usuário.
+    
+    Herda de ctk.CTk e gerencia a coleta de credenciais e validação
+    com o banco de dados antes de liberar acesso ao sistema principal.
+    """
 
     def __init__(self):
         super().__init__()
-        self.title('Sistem de Login')
+        self.title('Sistema de Login')
         self.geometry('350x400')
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure((0, 1, 2, 3, 4, 5), weight=0)
@@ -54,19 +54,15 @@ class Login(ctk.CTk):
         self.status_label.grid(row=5, column=0, pady=5)
 
     def validar_login(self):
-        """ Valida o login que o usuário inseriu na entry"""
+        """
+        Coleta os dados dos campos Entry e valida contra o banco de dados.
+        """
         
         usuario = self.usuario_entry.get()
         senha = self.senha_entry.get()
-        login_sucesso = False
         usuario_logado = usuario
-
-        for _, v in enumerate(pega_dados()):
-            if usuario == v[1] and senha == v[2]:
-                login_sucesso = True
-                break
          
-        if login_sucesso:
+        if verifica_login(usuario, senha):
             self.status_label.configure(text='Login feito com sucesso', text_color='green')
             self.update_idletasks() # Atualiza a UI para mostrar a mensagem
             sleep(2)
@@ -83,19 +79,25 @@ class Login(ctk.CTk):
     
 
     def abrir_tela_registro(self):
-        """ Direciona o usuário para fazer cadastro chamando a classe Registro_usuario"""
+        """
+        Abre a janela Toplevel para registro de um novo usuário.
+        Pausa as interações na tela de login enquanto a janela de registro estiver aberta.
+        """
         
         # Passa a própria instância da tela de login para a tela de registro
         register_window = Registro_usuario(self, login_instance=self)
-        #self.status_label.configure(text='Abrindo tela de registro...', text_color='blue')
         
-        # A mainloop() não é chamada para toplevels, elas são gerenciadas pelo master.
-        self.wait_window(register_window) #Pausa a janela de login até a popup fechar
+        self.wait_window(register_window)
 
 
 
 class Registro_usuario(ctk.CTkToplevel):
-    """Classe para registro: configuração da interface para receber dados e a inserção dos dados no BD. (inserir_usuario)"""
+    """
+    Interface flutuante (Toplevel) para cadastro de novos usuários.
+    
+    Verifica se as senhas coincidem e envia os dados para a função 
+    inserir_usuario do módulo de banco de dados.
+    """
 
     def __init__(self,  master=None, login_instance=None):
         super().__init__(master)
@@ -132,7 +134,10 @@ class Registro_usuario(ctk.CTkToplevel):
 
 
     def processar_registro(self):
-        """Processa o registro - pega os dados inseridos, verifica e guarda no BD"""
+        """
+        Valida os campos de texto preenchidos e solicita a inserção no banco de dados.
+        Exibe mensagens de feedback visual na interface baseadas no retorno da query.
+        """
         
         usuario = self.novo_usuario.get().strip()
         senha1 = self.nova_senha.get().strip()
@@ -167,7 +172,12 @@ class Registro_usuario(ctk.CTkToplevel):
 
 
 class Main_app(ctk.CTk):
-    """ Classe Main - app principal, configuração de interface, listamento de tarefas do BD. Intereção com app, atualição, delete, inserção... (CRUD)"""
+    """
+    Interface Principal do Gerenciador de Tarefas.
+    
+    Gerencia a exibição, adição, conclusão e exclusão de tarefas (CRUD)
+    específicas do usuário autenticado, consumindo os métodos do banco de dados.
+    """
 
     def __init__(self, logged_in_username=None):
         super().__init__()
@@ -234,12 +244,7 @@ class Main_app(ctk.CTk):
 
     
     def carregar_bd(self):
-        """ Este método é responsável por buscar as tarefas do usuário lagado no banco de dados e exibi-las na interface. Necessário passar id do usuário..."""
-
-        """ código para quando o método carregar_bd for chamado em outra 'situação'"
-        for widget_data in self.task_widgets_data:
-            widget_data['frame'].destroy()
-        self.task_widgets_data.clear() # Limpa a lista interna também"""
+        """Busca tarefas do usuario no banco de dados e as renderiza na UI."""
 
         tarefas = listar_tarefas(self.user_id) #método que retorna uma lista de tarefas
 
@@ -249,7 +254,7 @@ class Main_app(ctk.CTk):
 
 
     def add_tarefa(self): 
-        '''Pega tarefa inserida no entry e manda para a função ...widget, salva tarefa no banco de dados'''
+        """Captura o texto do input, insere no banco de dados e atualiza a interface."""
 
         tarefa_text = self.tarefa_entry.get().strip()
 
@@ -266,8 +271,12 @@ class Main_app(ctk.CTk):
             
     def _cria_add_tarefa(self, tarefa_id, tarefa_text, concluida_status):
         """
-        Cria e adiciona um widget de tarefa à UI.
-        Este método é interno e chamado por add_task e load_tasks_from_db.
+        Metodo auxiliar interno para criar os widgets visuais de uma tarefa.
+        
+        Args:
+            tarefa_id (int): ID da tarefa retornado pelo banco.
+            tarefa_text (str): Descrição da tarefa.
+            concluida_status (int): 1 para concluida, 0 para pendente.
         """
 
         task_frame = ctk.CTkFrame(self.tasks_container_frame, fg_color="transparent")
@@ -299,7 +308,7 @@ class Main_app(ctk.CTk):
 
 
     def status_tarefa(self, tarefa_id, checkbox):
-        """ Este método lida com a atualização do status da tarefa quando o checkbox é marcado ou desmarcado."""
+        """Atualiza o status de conclusao (checkbox) no banco de dados."""
 
         novo_status = checkbox.get() # 1 se marcado, 0 se desmarcado
         print(f"Tarefa ID: {tarefa_id}, Novo Status: {novo_status}")
@@ -316,7 +325,7 @@ class Main_app(ctk.CTk):
 
 
     def remove_tarefa(self, tarefa_id_remove, tarefa_frame_remove):
-        """Este método é chamado quando o botão "X" de uma tarefa é clicado. Apaga do BD e depois da interface."""
+        """Deleta a tarefa do banco de dados e a remove visualmente da interface."""
 
         if deletar_tarefa(tarefa_id_remove):
             tarefa_frame_remove.destroy()
@@ -328,7 +337,7 @@ class Main_app(ctk.CTk):
 
 
     def voltar_Plogin(self):
-        """ Método para voltar para a tela de login (botão 'Sair')"""
+        """"Desloga o usuario e retorna para a tela de autenticacao."""
 
         self.nomeusuario_label.configure(text=f'Até a próxima {self.usuario_logado} !', text_color='red')
         self.update_idletasks()
@@ -348,4 +357,5 @@ if __name__ == "__main__":
     # Inicia a primeira tela (tela de login)
     login_app = Login()
     login_app.mainloop()
+
 

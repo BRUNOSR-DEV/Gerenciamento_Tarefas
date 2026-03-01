@@ -83,17 +83,19 @@ def desconectar(conn):
 
 
 
-def pega_dados(conn=None):
+def verifica_login(usuario, senha, conn=None):
     """
-    Busca todos os usuários cadastrados no banco de dados.
+    Verificar usuario e senha no BD e confirmar login.
     
     Args:
+        usuario (str): Nome do usuário a ser pesquisado
+        senha (str): Senha do usuário a ser pesquisado
         conn (MySQLdb.connections.Connection, optional): Conexão ativa com o banco. 
             Se não fornecida, a função abre e gerencia sua própria conexão.
 
     Returns:
-        list: Lista de tuplas com os dados dos usuários. Retorna uma lista vazia [] 
-              se não houver usuários ou em caso de falha não-crítica.
+        True: Se o usuário e senha estiver correto e no BD, confirma o acesso 
+        None: Se o usuário não for localizado ou tiver erro de digitação.
     """
 
     gerenciar_conn = False
@@ -105,20 +107,22 @@ def pega_dados(conn=None):
     cursor = conn.cursor() # Mensageiro, passa o comando e retorna resltados
 
     try:
-        cursor.execute('SELECT * FROM usuario')
-        usuarios = cursor.fetchall()
+        cursor.execute('SELECT id FROM usuario WHERE nome_usuario=%s AND senha=%s', (usuario, senha))
+        login_sucesso = cursor.fetchone()
 
-        if usuarios:
-            return usuarios
+        if login_sucesso:
+            print('Usuário e senha encontrado! ')
+            return login_sucesso
         else:
-            return []
+            print("Usuário ou Senha não encontrado!")
+            return None
         
     except MySQLdb.Error as e: # Captura erro específico do MySQL
-        print(f'Erro no MySQL ao pegar dados: {e}')
+        print(f'Erro no MySQL ao verificar usuário e senha: {e}')
         raise # Re-levanta a exceção para que o chamador saiba que algo deu errado
 
     except Exception as e:
-        print(f'Erro inesperado ao pegar dados: {e}')
+        print(f'Erro inesperado ao verificar usuário e senha: {e}')
 
     finally:
         if gerenciar_conn:

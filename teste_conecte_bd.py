@@ -1,89 +1,130 @@
+"""
+Módulo de Testes Unitários - Gerenciador de Tarefas.
+
+Este script utiliza o framework 'unittest' para validar as operações de CRUD
+(Create, Read, Update, Delete) no banco de dados MySQL.
+
+ATENÇÃO: Este script realiza operações destrutivas (DELETE). 
+Certifique-se de que o 'teste_config.ini' aponta para um banco de dados de TESTE, 
+e não para o banco de dados principal da aplicação 'config.ini'.
+"""
 
 import unittest
-import os
 import MySQLdb
+
+import configparser 
 
 
 from models.conecte_bd import (
     desconectar, inserir_usuario,
     inserir_tarefas, pega_id, listar_tarefas, deletar_tarefa,
-    atualizar_checkbox, pega_dados, ler_configuracao_bd
+    atualizar_checkbox, verifica_login, 
 )
+
+
 
 def conectar_teste():
     """
-    Função para conectar ao servidor
+    Estabelece conexão exclusiva para o ambiente de testes lendo o teste_config.ini
     """
-    bd_config = ler_configuracao_bd()
-    if not bd_config:
-        # Se as credenciais não puderam ser lidas, não tente conectar
-        print("Não foi possível conectar ao banco de dados devido a um erro de configuração.")
+    config = configparser.ConfigParser()
+    config.read('teste_config.ini')
+    
+    if 'mysql' not in config:
+        print("Erro: Arquivo config_teste.ini ou seção [mysql] não encontrada.")
         return None
+
+    bd_config = config['mysql']
 
     try:
         conn = MySQLdb.connect(
-            db=bd_config['db'],
-            host=bd_config['host'],
-            user=bd_config['user'],
-            passwd=bd_config['passwd']
+            db=bd_config.get('db'),
+            host=bd_config.get('host', 'localhost'),
+            user=bd_config.get('user'),
+            passwd=bd_config.get('passwd')
         )
         return conn
 
     except MySQLdb.Error as e:
-        print(f'Erro na conexão ao MySql Server de TESTE  : {e}')
+        print(f'Erro na conexão ao MySQL Server de TESTE: {e}')
         raise
 
 
 def limpar_tabelas(conn):
     """
-    Limpa os dados das tabelas de teste.
+    Limpa os dados das tabelas para garantir um ambiente isolado em cada teste.
+    
+    Trava de Segurança: Só executa o DELETE se o nome do banco de dados
+    terminar com '_teste' ou '_test', evitando apagar dados reais acidentalmente.
     """
     cursor = conn.cursor()
+    
+    # Busca o nome do banco de dados atual para a trava de segurança
+    cursor.execute("SELECT DATABASE()")
+    db_name = cursor.fetchone()[0]
+
+    if "teste" not in db_name.lower():
+        raise Exception(
+            f"TRAVA DE SEGURANÇA: O banco conectado '{db_name}' não parece ser um banco de testes. "
+            "Operação de limpeza abortada para evitar perda de dados reais."
+        )
+
     try:
+        # Desativa temporariamente a checagem de chave estrangeira para limpar sem erros
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
         cursor.execute("DELETE FROM tarefas")
         cursor.execute("DELETE FROM usuario")
-        # Se você tem auto-incremento, pode querer resetar para 1
-        # cursor.execute("ALTER TABLE usuarios AUTO_INCREMENT = 1")
-        # cursor.execute("ALTER TABLE tarefas AUTO_INCREMENT = 1")
-        conn.commit() # Commit das operações de limpeza
-        print("Tabelas de teste limpas.")
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
+        conn.commit() 
     except MySQLdb.Error as e:
         print(f"Erro ao limpar tabelas de teste: {e}")
         conn.rollback()
-        raise # Re-levanta para falhar o teste
+        raise
 
 
 class TestGerenciadorTarefas(unittest.TestCase):
-
-    """def __init__(self, methodName= 'runTest'):
-        super().__init__(methodName)
-        self.conn= conectar_teste()"""
+    """
+    Suite de testes para validar a integridade da camada de persistência.
+    """
 
     # Este método é executado ANTES de CADA teste
     def setUp(self):
+        """Método executado ANTES de cada teste para preparar o ambiente."""
         self.conn = conectar_teste()
         # Limpa as tabelas antes de cada teste para garantir um estado limpo
         limpar_tabelas(self.conn) 
         print(f"\n--- Configurando teste: {self._testMethodName} ---")
 
-    # Este método é executado DEPOIS de CADA teste
+
     def tearDown(self):
-        # Fecha a conexão de teste para CADA TESTE
+        """Método executado DEPOIS de cada teste para liberar recursos."""
         if self.conn:
             self.conn.close()
         print(f"--- Limpando após teste: {self._testMethodName} ---")
-        # Não remova arquivos aqui para MySQL
 
 
     def test_inserir_usuario_e_pegar_id(self):
-        # Testa se um usuário pode ser inserido e se seu ID pode ser recuperado
+        """Verifica se um usuário é inserido corretamente e retorna um ID válido."""
+
         self.assertTrue(inserir_usuario("testuser_unit", "senha123", self.conn))
         user_id = pega_id("testuser_unit", self.conn)
         self.assertIsNotNone(user_id)
         self.assertGreater(user_id, 0) # ID deve ser maior que 0
 
+    def test_verifica_login(self):
+        """ Verifica se usuário e senha insereido esta no banco de dados e retorna True"""
+
+        #inserindo usuario no bd de teste
+        inserir_usuario("testuser", "senha123", self.conn)
+
+        self.assertTrue(verifica_login("testuser", "senha123" , self.conn ))
+        
+        self.assertFalse(verifica_login("testuser", "senha_errada", self.conn))
+        self.assertFalse(verifica_login("test_errado", "senha123", self.conn))
 
     def test_inserir_tarefas(self):
+        """Valida a inserção de uma nova tarefa vinculada a um usuário."""
+
         inserir_usuario("testuser2", "senha456", self.conn)
         user_id = pega_id("testuser2", self.conn)
         self.assertIsNotNone(user_id)
@@ -93,6 +134,8 @@ class TestGerenciadorTarefas(unittest.TestCase):
         self.assertGreater(tarefa_id, 0)
 
     def test_listar_tarefas(self):
+        """Garante que a listagem retorna a quantidade e os dados exatos inseridos."""
+
         inserir_usuario("testuser3", "senha789", self.conn)
         user_id = pega_id("testuser3", self.conn)
 
@@ -107,6 +150,8 @@ class TestGerenciadorTarefas(unittest.TestCase):
         self.assertEqual(tarefas[1][2], 1)
 
     def test_deletar_tarefa(self):
+        """Confirma se uma tarefa é removida fisicamente do banco de dados."""
+
         inserir_usuario("testuser4", "senha101", self.conn)
         user_id = pega_id("testuser4", self.conn)
         tarefa_id = inserir_tarefas("Tarefa para deletar", user_id, 0, self.conn)
@@ -117,6 +162,8 @@ class TestGerenciadorTarefas(unittest.TestCase):
         self.assertEqual(len(tarefas_restantes), 0)
 
     def test_atualizar_status_tarefa(self):
+        """Verifica a mudança de estado (checkbox) de uma tarefa."""
+
         inserir_usuario("testuser5", "senha202", self.conn)
         user_id = pega_id("testuser5", self.conn)
         tarefa_id = inserir_tarefas("Tarefa para atualizar", user_id, 0, self.conn)
